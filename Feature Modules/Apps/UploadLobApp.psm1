@@ -229,60 +229,65 @@ function New-LobApp {
         [PSObject]$mobileApp
     )
 
-    Write-Host "Validating the file '$filePath'..." -ForegroundColor Yellow
+    try {
+        Write-Host "Validating the file '$filePath'..." -ForegroundColor Yellow
 
-    # Make sure the file exists
-    if (-not (Test-Path -LiteralPath $filePath -PathType Leaf)) {
-        throw "The file '$filePath' does not exist"
+        # Make sure the file exists
+        if (-not (Test-Path -LiteralPath $filePath -PathType Leaf)) {
+            throw "The file '$filePath' does not exist"
+        }
+
+        # Get the file
+        $sourceFile = Get-Item $filePath
+
+        # Validate the provided mobileApp
+        Write-Host "Validating the provided mobileApp..." -ForegroundColor Yellow
+        ValidateMobileAppWithFile -file $sourceFile -mobileApp $mobileApp
+
+        # Post the app metadata to Intune
+        $createdApp = $mobileApp | New-DeviceAppManagement_MobileApps
+
+        # Create a new content version for this app
+        Write-Host "Creating Content Version in Intune for the application..." -ForegroundColor Yellow
+        $contentVersion = $createdApp | New-DeviceAppManagement_MobileApps_ContentVersions
+
+        # Encrypt the file
+        Write-Host "Encrypting the file '$($sourceFile.Name)'..." -ForegroundColor Yellow
+        $encryptionResult = EncryptFile -sourceFile $sourceFile
+
+        # Upload the file manifest to Intune
+        Write-Host "Uploading the file's information to Intune..." -ForegroundColor Yellow
+        $file = $contentVersion | New-DeviceAppManagement_MobileApps_ContentVersions_Files `
+            -name $sourceFile.Name `
+            -size $sourceFile.Length `
+            -sizeEncrypted $encryptionResult.file.Length
+
+        # Wait for Azure Storage to get ready
+        Write-Host "Waiting for the file's upload URI to be created..." -ForegroundColor Yellow
+        $file = WaitForAzureStorageRequest -file $file
+
+        # Upload the file to Azure Storage
+        Write-Host "Uploading file to Azure Storage at '$($file.azureStorageUri)'..." -f Yellow
+        UploadFileToAzureStorage -sasUri ($file.azureStorageUri) -bytes ($encryptionResult.file)
+
+        # Commit file
+        Write-Host "Asking Intune to commit the file that has been uploaded to Azure Storage..." -ForegroundColor Yellow
+        $file | Invoke-DeviceAppManagement_MobileApps_ContentVersions_Files_Commit -fileEncryptionInfo $encryptionResult.info
+
+        # Wait for Azure Storage to aknowledge the commit
+        Write-Host "Waiting for Intune to process the commit file request..." -ForegroundColor Yellow
+        $file = WaitForAzureFileCommitted -file $file
+
+        # Tell Intune that this file is now the latest version of the app
+        Write-Host "Telling Intune that the committed file is the latest version of this app..." -ForegroundColor Yellow
+        $createdApp | Update-DeviceAppManagement_MobileApps -committedContentVersion $file.contentVersionId
+
+        # Return the file
+        Write-Output $file
+
+        Write-Host "Finished uploading app '$filePath'" -ForegroundColor Green
+    } catch {
+        # To ensure that all errors are terminating errors
+        throw
     }
-
-    # Get the file
-    $sourceFile = Get-Item $filePath
-
-    # Validate the provided mobileApp
-    Write-Host "Validating the provided mobileApp..." -ForegroundColor Yellow
-    ValidateMobileAppWithFile -file $sourceFile -mobileApp $mobileApp
-
-    # Post the app metadata to Intune
-    $createdApp = $mobileApp | New-DeviceAppManagement_MobileApps
-
-    # Create a new content version for this app
-    Write-Host "Creating Content Version in Intune for the application..." -ForegroundColor Yellow
-    $contentVersion = $createdApp | New-DeviceAppManagement_MobileApps_ContentVersions
-
-    # Encrypt the file
-    Write-Host "Encrypting the file '$($sourceFile.Name)'..." -ForegroundColor Yellow
-    $encryptionResult = EncryptFile -sourceFile $sourceFile
-
-    # Upload the file manifest to Intune
-    Write-Host "Uploading the file's information to Intune..." -ForegroundColor Yellow
-    $file = $contentVersion | New-DeviceAppManagement_MobileApps_ContentVersions_Files `
-        -name $sourceFile.Name `
-        -size $sourceFile.Length `
-        -sizeEncrypted $encryptionResult.file.Length
-
-    # Wait for Azure Storage to get ready
-    Write-Host "Waiting for the file's upload URI to be created..." -ForegroundColor Yellow
-    $file = WaitForAzureStorageRequest -file $file
-
-    # Upload the file to Azure Storage
-    Write-Host "Uploading file to Azure Storage at '$($file.azureStorageUri)'..." -f Yellow
-    UploadFileToAzureStorage -sasUri ($file.azureStorageUri) -bytes ($encryptionResult.file)
-
-    # Commit file
-    Write-Host "Asking Intune to commit the file that has been uploaded to Azure Storage..." -ForegroundColor Yellow
-    $file | Invoke-DeviceAppManagement_MobileApps_ContentVersions_Files_Commit -fileEncryptionInfo $encryptionResult.info
-
-    # Wait for Azure Storage to aknowledge the commit
-    Write-Host "Waiting for Intune to process the commit file request..." -ForegroundColor Yellow
-    $file = WaitForAzureFileCommitted -file $file
-
-    # Tell Intune that this file is now the latest version of the app
-    Write-Host "Telling Intune that the committed file is the latest version of this app..." -ForegroundColor Yellow
-    $createdApp | Update-DeviceAppManagement_MobileApps -committedContentVersion $file.contentVersionId
-
-    # Return the file
-    Write-Output $file
-
-    Write-Host "Finished uploading app '$filePath'" -ForegroundColor Green
 }
