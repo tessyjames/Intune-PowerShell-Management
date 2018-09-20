@@ -1,6 +1,4 @@
-
 # Contributing
-
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
 the rights to use your contribution. For details, visit https://cla.microsoft.com.
@@ -14,7 +12,6 @@ For more information see the [Code of Conduct FAQ](https://opensource.microsoft.
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
 # Legal Notices
-
 Microsoft and any contributors grant you a license to the Microsoft documentation and other content
 in this repository under the [Creative Commons Attribution 4.0 International Public License](https://creativecommons.org/licenses/by/4.0/legalcode),
 see the [LICENSE](LICENSE) file, and grant you a license to any code in the repository under the [MIT License](https://opensource.org/licenses/MIT), see the
@@ -29,3 +26,12 @@ Privacy information can be found at https://privacy.microsoft.com/en-us/
 
 Microsoft and any contributors reserve all others rights, whether under their respective copyrights, patents,
 or trademarks, whether by implication, estoppel or otherwise.
+
+# Usage
+## Setup
+The Feature Modules and Samples depend on the [Intune PowerShell SDK](https://github.com/Microsoft/Intune-PowerShell-SDK).  Please install the Intune PowerShell SDK before running any of the code found in this repository.
+
+## Tips and Tricks
+ - Create TimeSpan objects using the [New-TimeSpan](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/new-timespan?view=powershell-6) cmdlet
+ - Create DateTime or DateTimeOffset objects using the [Get-Date](https://docs.microsoft.com/en-us/powershell/module/Microsoft.PowerShell.Utility/Get-Date?view=powershell-6) cmdlet
+ - If a parameter accepts an "Object" rather than a more specific type, use the documentation to identify what type of object it requires.  For example, if the documentation says that a parameter represents a property of type "microsoft.graph.mobileApp" or "microsoft.graph.deviceConfiguration", use the "New-MobileAppObject" or "New-DeviceConfigurationObject" cmdlets to create the respective objects.
