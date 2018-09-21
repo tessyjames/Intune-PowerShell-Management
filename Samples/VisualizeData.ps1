@@ -3,8 +3,8 @@ param(
     [ValidateNotNullOrEmpty()]
     [string]$Title,
 
-    [ValidateNotNullOrEmpty()]
-    [System.Windows.Forms.DataVisualization.Charting.SeriesChartType]$ChartType,
+    [ValidateSet('Pie', 'Bar', 'Column')]
+    [string]$ChartType,
 
     [string]$XLabel,
 
@@ -40,21 +40,27 @@ $series = New-Object System.Windows.Forms.DataVisualization.Charting.Series -Arg
 $series.Points.DataBindXY($XValues, $YValues)
 
 # Set specialized chart options based on chart type
-$series.ChartType = $ChartType
 switch ($ChartType) {
-    [System.Windows.Forms.DataVisualization.Charting.SeriesChartType]::Pie {
+    'Pie' {
+        $series.ChartType = [System.Windows.Forms.DataVisualization.Charting.SeriesChartType]::Pie
         $series["PieLabelStyle"] = "Outside"
         $series["PieLineColor"] = "Black"
         $series["PieDrawingStyle"] = "Concave"
         ($series.Points.FindMaxByValue())["Exploded"] = $true
     }
 
-    [System.Windows.Forms.DataVisualization.Charting.SeriesChartType]::Bar {
+    'Bar' {
+        $series.ChartType = [System.Windows.Forms.DataVisualization.Charting.SeriesChartType]::Bar
         $series['DrawingStyle'] = 'Cylinder'
     }
 
-    [System.Windows.Forms.DataVisualization.Charting.SeriesChartType]::Column {
+    'Column' {
+        $series.ChartType = [System.Windows.Forms.DataVisualization.Charting.SeriesChartType]::Column
         $series['DrawingStyle'] = 'Cylinder'
+    }
+
+    default {
+        throw "Unknown chart type '$ChartType'"
     }
 }
 $chart.BackColor = [System.Drawing.Color]::Transparent
