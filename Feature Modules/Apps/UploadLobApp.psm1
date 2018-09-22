@@ -124,7 +124,7 @@ function script:UploadAzureStorageChunk($sasUri, $id, $body) {
     if ($logHeaders) { WriteHeaders $headers }
 
     try {
-        Invoke-WebRequest $uri -Method Put -Headers $headers -Body $encodedBody | Out-Null
+        Invoke-WebRequest $uri -Method Put -Headers $headers -Body $encodedBody -UseBasicParsing | Out-Null
     } catch {
         Write-Host -ForegroundColor Red $request
         Write-Host -ForegroundColor Red $_.Exception.Message
