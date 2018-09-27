@@ -280,7 +280,7 @@ function New-LobApp {
 
         # Tell Intune that this file is now the latest version of the app
         Write-Host "Telling Intune that the committed file is the latest version of this app..." -ForegroundColor Yellow
-        $createdApp | Update-DeviceAppManagement_MobileApps -committedContentVersion $file.contentVersionId
+        $createdApp | Update-DeviceAppManagement_MobileApps -committedContentVersion $contentVersion.id
 
         # Return the file
         Write-Output $file
