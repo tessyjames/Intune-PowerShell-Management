@@ -1,4 +1,4 @@
-function script:EncryptFile($sourceFile) {
+function EncryptFile($sourceFile) {
     $bufferBlockSize = 1024 * 4
     $buffer = New-Object byte[] $bufferBlockSize
     $bytesRead = 0
@@ -80,7 +80,7 @@ function script:EncryptFile($sourceFile) {
 
 ###################################################################################################
 
-function script:WaitForFileProcessing($file, $stage) {
+function WaitForFileProcessing($file, $stage) {
     $attempts = 6
     $waitTimeInSeconds = 1
 
@@ -102,17 +102,17 @@ function script:WaitForFileProcessing($file, $stage) {
     throw "File request timed out."
 }
 
-function script:WaitForAzureStorageRequest($file) {
+function WaitForAzureStorageRequest($file) {
     return WaitForFileProcessing -file $file -stage 'AzureStorageUriRequest'
 }
 
-function script:WaitForAzureFileCommitted($file) {
+function WaitForAzureFileCommitted($file) {
     return WaitForFileProcessing -file $file -stage 'CommitFile'
 }
 
 ###################################################################################################
 
-function script:UploadAzureStorageChunk($sasUri, $id, $body) {
+function UploadAzureStorageChunk($sasUri, $id, $body) {
     $uri = "$sasUri&comp=block&blockid=$id"
     $request = "PUT $uri"
 
@@ -133,7 +133,7 @@ function script:UploadAzureStorageChunk($sasUri, $id, $body) {
 
 }
 
-function script:FinalizeAzureStorageUpload($sasUri, $ids) {
+function FinalizeAzureStorageUpload($sasUri, $ids) {
     $uri = "$sasUri&comp=blocklist"
     $request = "PUT $uri"
 
@@ -155,7 +155,7 @@ function script:FinalizeAzureStorageUpload($sasUri, $ids) {
     }
 }
 
-function script:UploadFileToAzureStorage($sasUri, $bytes) {
+function UploadFileToAzureStorage($sasUri, $bytes) {
     # Chunk size = 1 MiB
     $chunkSizeInBytes = 1024 * 1024
 
@@ -291,3 +291,8 @@ function New-LobApp {
         throw
     }
 }
+
+###################################################################################################
+
+# Don't export helper functions
+Export-ModuleMember -Function New-LobApp
