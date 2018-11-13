@@ -2,7 +2,7 @@
 ## Intro to the module
 - Explain how the Intune PowerShell SDK fits into how we can use Intune
     - Intune -> Graph -> UI vs. Graph -> PowerShell SDK -> Scenario modules
-- Show GitHub repo + releases + docs (aka.ms/intuneposh)
+- Show GitHub repo + releases + docs (aka.ms/IntunePowerShell)
 
 Load the SDK.
 ```PowerShell
