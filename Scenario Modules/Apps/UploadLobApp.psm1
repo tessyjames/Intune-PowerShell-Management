@@ -191,6 +191,7 @@ function script:ValidateMobileAppWithFile($file, $mobileApp) {
     # Validate the file based on the OData type of the app metadata object
     $androidAppTypeName = '#microsoft.graph.androidLobApp'
     $iosAppTypeName = '#microsoft.graph.iosLobApp'
+    $isValidated = $true
     switch ($mobileAppTypeName) {
         $androidAppTypeName {
             # Make sure this is the right file type
@@ -212,8 +213,13 @@ function script:ValidateMobileAppWithFile($file, $mobileApp) {
             }
         }
         default {
-            throw "Unknown app type '$mobileAppTypeName'"
+            $isValidated = $false
+            Write-Host -ForegroundColor Yellow "Skipping validation for the provided app type '$mobileAppTypeName'"
         }
+    }
+    
+    if ($isValidated) {
+        Write-Host -ForegroundColor Yellow "Validated app of type '$mobileAppTypeName'"
     }
 }
 
