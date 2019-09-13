@@ -1,4 +1,5 @@
 . "$PSScriptRoot\..\IntuneFirewallRulesMigration\Public\Send-IntuneFirewallRulesPolicy.ps1"
+. "$PSScriptRoot\..\IntuneFirewallRulesMigration\Private\Strings.ps1"
 
 Describe "Send-IntuneFirewallRulesPolicy" {
     Context "Empty base case" {
@@ -36,32 +37,32 @@ Describe "Send-IntuneFirewallRulesPolicy" {
     Context "Telemetry test cases" {
         Mock Invoke-MSGraphRequest -MockWith { Throw "foo" }
 
-        It "Should send graph telemetry if given 'Yes'" {
-            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return "Yes" }
+        It "Should send graph telemetry if given '$($Strings.Yes)'" {
+            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.Yes }
             Mock Send-IntuneFirewallGraphTelemetry
             @(1) | Send-IntuneFirewallRulesPolicy
             Assert-MockCalled Send-IntuneFirewallGraphTelemetry -Times 1 -Exactly
         }
 
-        It "Should send graph telemetry if given 'No'" {
-            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return "No" }
+        It "Should send graph telemetry if given '$($Strings.No)'" {
+            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.No }
             Mock Send-IntuneFirewallGraphTelemetry
             { @(1) | Send-IntuneFirewallRulesPolicy } | Should -Throw "User aborted error handling for Send-IntuneFirewallRulesPolicy"
         }
 
-        It "Should send graph telemetry if given 'Continue'" {
-            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return "Continue" }
+        It "Should send graph telemetry if given '$($Strings.Continue)'" {
+            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.Continue }
             Mock Send-IntuneFirewallGraphTelemetry
             @(1) | Send-IntuneFirewallRulesPolicy
         }
     }
 
     # Separate context to avoid colliding mocks with "Yes" test case
-    Context "Telemetry 'Yes To All'" {
+    Context "Telemetry '$($Strings.YesToAll)'" {
         Mock Invoke-MSGraphRequest -MockWith { Throw "foo" }
 
-        It "Should send graph telemetry if given 'Yes To All'" {
-            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return "Yes To All" }
+        It "Should send graph telemetry if given '$($Strings.YesToAll)'" {
+            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.YesToAll}
             Mock Send-IntuneFirewallGraphTelemetry
             @(1) | Send-IntuneFirewallRulesPolicy
             Assert-MockCalled Send-IntuneFirewallGraphTelemetry -Times 1 -Exactly
@@ -69,11 +70,11 @@ Describe "Send-IntuneFirewallRulesPolicy" {
     }
 
     # Separate context to avoid colliding mocks with "Yes" test case
-    Context "Telemetry 'Continue'" {
+    Context "Telemetry '$($Strings.Continue)'" {
         Mock Invoke-MSGraphRequest -MockWith { Throw "foo" }
 
-        It "Should send graph telemetry if given 'Continue'" {
-            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return "Continue" }
+        It "Should send graph telemetry if given '$($Strings.Continue)'" {
+            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.Continue }
             Mock Send-IntuneFirewallGraphTelemetry
             @(1) | Send-IntuneFirewallRulesPolicy
             Assert-MockCalled Send-IntuneFirewallGraphTelemetry -Times 0 -Exactly

@@ -27,6 +27,11 @@ function ConvertTo-IntuneFirewallRule {
     .LINK
     https://docs.microsoft.com/en-us/powershell/module/netsecurity/get-netfirewallrule?view=win10-ps#description
 
+    .INPUTS
+    Microsoft.Management.Infrastructure.CimInstance#root\StandardCimv2\MSFT_NetFirewallRule[]
+
+    A stream of network firewall rules retrieved from the NetSecurity module
+
     .OUTPUTS
     IntuneFirewallRule[]
 
@@ -51,6 +56,9 @@ function ConvertTo-IntuneFirewallRule {
     }
 
     Process {
+        # Get-NetFirewallRule returns firewall rule objects pretty quickly,
+        # so we can wait to pool the firewall rule objects into an array
+        # to display the progress bars
         $firewallRules += $_
     }
 
@@ -89,18 +97,19 @@ function ConvertTo-IntuneFirewallRule {
 
                 # Check to see if a firewall rule needs to be split, and prompts the user if they want to split
                 If (Test-IntuneFirewallRuleSplit -firewallObject $intuneFirewallRuleObject) {
-                    $splitFirewallRuleChoice = Get-SplitIntuneFirewallRuleChoice -splitConflictingAttributes $splitConflictingAttributes -firewallObject $intuneFirewallRuleObject
+                    $splitFirewallRuleChoice = Get-SplitIntuneFirewallRuleChoice `
+                        -splitConflictingAttributes $splitConflictingAttributes `
+                        -firewallObject $intuneFirewallRuleObject
                     $splittedFirewallRuleObjects = Split-IntuneFirewallRule -firewallObject $intuneFirewallRuleObject
                     Switch ($splitFirewallRuleChoice) {
-                        "Yes" { $intuneFirewallRuleObjects += $splittedFirewallRuleObjects }
-                        "No" { Throw $Strings.ConvertToIntuneFirewallRuleNoSplit }
-                        "Yes To All" {
+                        $Strings.Yes { $intuneFirewallRuleObjects += $splittedFirewallRuleObjects }
+                        $Strings.No { Throw $Strings.ConvertToIntuneFirewallRuleNoSplit }
+                        $Strings.YesToAll {
                             $intuneFirewallRuleObjects += $splittedFirewallRuleObjects
                             # Allows future splitting operations to continue without user prompt
                             $splitConflictingAttributes = $true
                         }
-                        # Skip the current firewall object
-                        "Continue" { continue }
+                        $Strings.Continue { continue }
                     }
                 }
                 Else {
@@ -119,13 +128,19 @@ function ConvertTo-IntuneFirewallRule {
                     -firewallRuleProperty $errorFirewallRuleProperty
                 # Choice is the index of the option
                 Switch ($choice) {
-                    "Yes" { Send-ConvertToIntuneFirewallRuleTelemetry -data $errorMessage -errorType $errorType -firewallRuleProperty $errorFirewallRuleProperty }
-                    "No" { Throw $Strings.ConvertToIntuneFirewallRuleNoException }
-                    "Yes To All" {
-                        Send-ConvertToIntuneFirewallRuleTelemetry -data $errorMessage -errorType $errorType -firewallRuleProperty $errorFirewallRuleProperty
+                    $Strings.Yes {
+                        Send-ConvertToIntuneFirewallRuleTelemetry -data $errorMessage `
+                            -errorType $errorType `
+                            -firewallRuleProperty $errorFirewallRuleProperty 
+                    }
+                    $Strings.No { Throw $Strings.ConvertToIntuneFirewallRuleNoException }
+                    $Strings.YesToAll {
+                        Send-ConvertToIntuneFirewallRuleTelemetry -data $errorMessage `
+                            -errorType $errorType `
+                            -firewallRuleProperty $errorFirewallRuleProperty
                         $sendConvertTelemetry = $true
                     }
-                    "Continue" { continue }
+                    $Strings.Continue { continue }
                 }
             }
         }

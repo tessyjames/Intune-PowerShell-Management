@@ -24,26 +24,26 @@ Describe "Send Telemetry Test Cases" {
 }
 
 Describe "Get-IntuneFirewallRuleErrorTelemetryChoice" {
-    It "Should return 'Yes' if given the -sendErrorTelemetryInitialized is passed with a true value" {
+    It "Should return '$($Strings.Yes)' if given the -sendErrorTelemetryInitialized is passed with a true value" {
         Get-IntuneFirewallRuleErrorTelemetryChoice -telemetryMessage "foo" -sendErrorTelemetryInitialized $true | Should -Be "Yes"
     }
 
-    It "Should return 'Yes' if user selected 'Yes'" {
+    It "Should return '$($Strings.Yes)' if user selected '$($Strings.Yes)'" {
         Mock Get-UserPrompt -MockWith { return 0 }
         Get-IntuneFirewallRuleErrorTelemetryChoice -telemetryMessage "foo" | Should -Be $Strings.Yes
     }
 
-    It "Should return 'No' if user selected 'No'" {
+    It "Should return '$($Strings.No)' if user selected '$($Strings.No)'" {
         Mock Get-UserPrompt -MockWith { return 1 }
         Get-IntuneFirewallRuleErrorTelemetryChoice -telemetryMessage "foo" | Should -Be $Strings.No
     }
 
-    It "Should return 'Yes to All' if user selected 'Yes To All'" {
+    It "Should return '$($Strings.YesToAll)' if user selected '$($Strings.YesToAll)'" {
         Mock Get-UserPrompt -MockWith { return 2 }
         Get-IntuneFirewallRuleErrorTelemetryChoice -telemetryMessage "foo" | Should -Be $Strings.YesToAll
     }
 
-    It "Should return 'Continue' if user selected 'Continue'" {
+    It "Should return '$($Strings.Continue)' if user selected '$($Strings.Continue)'" {
         Mock Get-UserPrompt -MockWith { return 3 }
         Get-IntuneFirewallRuleErrorTelemetryChoice -telemetryMessage "foo" | Should -Be $Strings.Continue
     }

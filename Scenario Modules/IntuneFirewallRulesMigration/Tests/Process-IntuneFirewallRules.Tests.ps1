@@ -1,5 +1,6 @@
 . "$PSScriptRoot\..\IntuneFirewallRulesMigration\Public\IntuneFirewallRule.ps1"
 . "$PSScriptRoot\..\IntuneFirewallRulesMigration\Private\Process-IntuneFirewallRules.ps1"
+. "$PSScriptRoot\..\IntuneFirewallRulesMigration\Private\Strings.ps1"
 
 Describe "Test-IntuneFirewallRuleSplit" {
     It "Should return True if serviceName, filePath, and packageFamilyName are filled" {
@@ -181,32 +182,32 @@ Describe "Copy-IntuneFirewallRule" {
 }
 
 Describe "Get-SplitIntuneFirewallRuleChoice" {
-    It "Should return 'Yes' if given the -splitConflictingAttributes flag with a true value" {
+    It "Should return '$($Strings.Yes)' if given the -splitConflictingAttributes flag with a true value" {
         $foo=New-IntuneFirewallRule
-        Get-SplitIntuneFirewallRuleChoice -firewallObject $foo -splitConflictingAttributes $true | Should -Be "Yes"
+        Get-SplitIntuneFirewallRuleChoice -firewallObject $foo -splitConflictingAttributes $true | Should -Be $Strings.Yes
     }
 
-    It "Should return 'Yes' if user selected 'Yes'" {
+    It "Should return '$($Strings.Yes)' if user selected '$($Strings.Yes)'" {
         $foo=New-IntuneFirewallRule
         Mock Get-UserPrompt -MockWith { return 0 }
-        Get-SplitIntuneFirewallRuleChoice -firewallObject $foo | Should -Be "Yes"
+        Get-SplitIntuneFirewallRuleChoice -firewallObject $foo | Should -Be $Strings.Yes
     }
 
-    It "Should return 'No' if user selected 'No'" {
+    It "Should return '$($Strings.No)' if user selected '$($Strings.No)'" {
         $foo=New-IntuneFirewallRule
         Mock Get-UserPrompt -MockWith { return 1 }
-        Get-SplitIntuneFirewallRuleChoice -firewallObject $foo | Should -Be "No"
+        Get-SplitIntuneFirewallRuleChoice -firewallObject $foo | Should -Be $Strings.No
     }
 
-    It "Should return 'Yes to All' if user selected 'Yes to All'" {
+    It "Should return '$($Strings.YesToAll)' if user selected '$($Strings.YesToAll)'" {
         $foo=New-IntuneFirewallRule
         Mock Get-UserPrompt -MockWith { return 2 }
-        Get-SplitIntuneFirewallRuleChoice -firewallObject $foo | Should -Be "Yes to All"
+        Get-SplitIntuneFirewallRuleChoice -firewallObject $foo | Should -Be $Strings.YesToAll
     }
 
-    It "Should return 'Continue' if user selected 'Continue'" {
+    It "Should return '$($Strings.Continue)' if user selected '$($Strings.Continue)'" {
         $foo=New-IntuneFirewallRule
         Mock Get-UserPrompt -MockWith { return 3 }
-        Get-SplitIntuneFirewallRuleChoice -firewallObject $foo | Should -Be "Continue"
+        Get-SplitIntuneFirewallRuleChoice -firewallObject $foo | Should -Be $Strings.Continue
     }
 }

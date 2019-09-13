@@ -48,7 +48,8 @@ function Send-IntuneFirewallGraphTelemetry {
         [String]
         $data
     )
-    Send-FailureTelemetry -data $data -category $Strings.TelemetryIntuneFirewallRuleGraph
+    Send-FailureTelemetry -data $data `
+        -category $Strings.TelemetryIntuneFirewallRuleGraph
 }
 
 function Send-FailureTelemetry {

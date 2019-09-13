@@ -40,6 +40,7 @@ function Show-OperationProgress {
         $activityMessage
     )
 
+    # The function should never be called with 0 or less objects because there needs to be objects to process
     If ($totalObjects -le 0) {
         Throw $Strings.ShowOperationProgressException
     }

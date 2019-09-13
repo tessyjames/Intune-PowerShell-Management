@@ -22,6 +22,11 @@ function Test-IntuneFirewallRuleSplit {
     .LINK
     https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
 
+    .INPUTS
+    IntuneFirewallRule
+
+    The Intune firewall rule to check if it needs to be split
+
     .OUTPUTS
     Boolean
 
@@ -65,6 +70,15 @@ function Split-IntuneFirewallRule {
 
     .LINK
     https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
+
+    .NOTES
+    Split-IntuneFirewallRule should be used when a split has been found, but it is possible to have the function return the same object passed to it.
+    If the firewall rule object does not have any of these attributes, however, it will not return the object, so it is best used when a split has
+    been found.
+
+    .INPUTS
+    IntuneFirewallRule
+    The Intune firewall rule object to split
 
     .OUTPUTS
     IntuneFirewallRule[]
@@ -126,8 +140,15 @@ function Copy-IntuneFirewallRule {
     a shallow copy or deep copy, Copy-FirewallRule will mimic this behavior. This means that arrays are shallowly copied.
     Operations using the shallow copy of an array should be considered carefully when using this function.
 
+    .INPUTS
+    IntuneFirewallRule
+
+    The Intune firewall rule object to copy
+
     .OUTPUTS
     IntuneFirewallRule
+
+    A copy of the Intune firewall rule object provided
     #>
     Param(
         [Parameter(Mandatory = $true)]

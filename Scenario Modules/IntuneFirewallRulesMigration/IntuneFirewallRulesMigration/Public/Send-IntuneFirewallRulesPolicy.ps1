@@ -28,10 +28,11 @@ Function Send-IntuneFirewallRulesPolicy {
     called with the ConvertTo-Json cmdlet and represented as a JSON string can be sent to Intune, with the Graph
     performing the validation on the the JSON payload.
 
+    Any attributes that have null or empty string values are filtered out from being sent to Graph. This is because
+    the Graph can insert default values when no set values have been placed in the payload.
+
     Users should authenticate themselves through the SDK first by running Connect-MSGraph, which will then allow
     them to use this cmdlet.
-
-    Send-IntuneFirewallRulesPolicy ignores null or empty string values from objects, only passing valued attributes to Graph
 
     .LINK
     https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
@@ -108,13 +109,13 @@ Function Send-IntuneFirewallRulesPolicy {
                         -sendErrorTelemetryInitialized $sendIntuneFirewallTelemetry `
                         -telemetryExceptionType $errorType
                     switch ($choice) {
-                        "Yes" { Send-IntuneFirewallGraphTelemetry -data $errorMessage }
-                        "No" { Throw $Strings.SendIntuneFirewallRulesPolicyException }
-                        "Yes To All" {
+                        $Strings.Yes { Send-IntuneFirewallGraphTelemetry -data $errorMessage }
+                        $Strings.No { Throw $Strings.SendIntuneFirewallRulesPolicyException }
+                        $Strings.YesToAll {
                             Send-IntuneFirewallGraphTelemetry -data $errorMessage
                             $sendIntuneFirewallTelemetry = $true
                         }
-                        "Continue" { continue }
+                        $Strings.Continue { continue }
                     }
                 }
             }

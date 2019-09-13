@@ -40,35 +40,35 @@ Describe "ConvertTo-IntuneFirewallRule" {
             Assert-MockCalled Split-IntuneFirewallRule -Exactly 0
         }
 
-        It "Should export two objects if user selected 'Yes' and two objects were returned from Split-IntuneFirewallChoice" {
+        It "Should export two objects if user selected '$($Strings.Yes)' and two objects were returned from Split-IntuneFirewallChoice" {
             Mock Test-IntuneFirewallRuleSplit -MockWith { return $true }
-            Mock Get-SplitIntuneFirewallRuleChoice -MockWith { return "Yes" }
+            Mock Get-SplitIntuneFirewallRuleChoice -MockWith { return $Strings.Yes }
             Mock Split-IntuneFirewallRule -MockWith { @(1, 2) }
 
             Get-NetFirewallRule | ConvertTo-IntuneFirewallRule | Should -HaveCount 2
         }
 
-        It "Should call Get-IntuneFirewallRuleErrorTelemetryChoice if user selected 'No'" {
+        It "Should call Get-IntuneFirewallRuleErrorTelemetryChoice if user selected '$($Strings.No)'" {
             # Returns 'Continue' to avoid having to handle other side effects from the selection
             Mock Test-IntuneFirewallRuleSplit -MockWith { return $true }
-            Mock Get-SplitIntuneFirewallRuleChoice -MockWith { return "No" }
-            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return "Continue" }
+            Mock Get-SplitIntuneFirewallRuleChoice -MockWith { return $Strings.No }
+            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.Continue }
 
             Get-NetFirewallRule | ConvertTo-IntuneFirewallRule
             Assert-MockCalled Get-IntuneFirewallRuleErrorTelemetryChoice -Exactly 1
         }
 
-        It "Should export two objects if user selected 'Yes To All' and two objects were returned from Split-IntuneFirewallChoice" {
+        It "Should export two objects if user selected '$($Strings.YesToAll)' and two objects were returned from Split-IntuneFirewallChoice" {
             Mock Test-IntuneFirewallRuleSplit -MockWith { return $true }
-            Mock Get-SplitIntuneFirewallRuleChoice -MockWith { return "Yes To All" }
+            Mock Get-SplitIntuneFirewallRuleChoice -MockWith { return $Strings.YesToAll }
             Mock Split-IntuneFirewallRule -MockWith { @(1, 2) }
 
             Get-NetFirewallRule | ConvertTo-IntuneFirewallRule | Should -HaveCount 2
         }
 
-        It "Should export no objects if user selected 'Continue'" {
+        It "Should export no objects if user selected '$($Strings.Continue)'" {
             Mock Test-IntuneFirewallRuleSplit -MockWith { return $true }
-            Mock Get-SplitIntuneFirewallRuleChoice -MockWith { return "Continue" }
+            Mock Get-SplitIntuneFirewallRuleChoice -MockWith { return $Strings.Continue }
             Mock Split-IntuneFirewallRule -MockWith { @(1, 2) }
 
             Get-NetFirewallRule | ConvertTo-IntuneFirewallRule | Should -HaveCount 0
@@ -95,32 +95,32 @@ Describe "ConvertTo-IntuneFirewallRule" {
         $mockFirewallObject = @{displayName = "foo"; description = "foo"; Profiles = 2; Action = 2; Direction = 2 }
         Mock Get-NetFirewallRule -MockWith { return @($mockFirewallObject) }
 
-        It "Should give ConvertToIntuneFirewallRule telemetry if given 'Yes'" {
+        It "Should give ConvertToIntuneFirewallRule telemetry if given '$($Strings.Yes)'" {
             Mock Test-IntuneFirewallRuleSplit -MockWith { Throw "Yes Error" }
-            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return "Yes" }
+            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.Yes }
             Mock Send-ConvertToIntuneFirewallRuleTelemetry
 
             Get-NetFirewallRule | ConvertTo-IntuneFirewallRule | Should -HaveCount 0
             Assert-MockCalled Send-ConvertToIntuneFirewallRuleTelemetry -Times 1 -Exactly
         }
 
-        It "Should throw an error if given 'No'" {
+        It "Should throw an error if given '$($Strings.No)'" {
             Mock Test-IntuneFirewallRuleSplit -MockWith { Throw "foo" }
-            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return "No" }
+            Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.No }
 
             { Get-NetFirewallRule | ConvertTo-IntuneFirewallRule } | Should -Throw $Strings.ConvertToIntuneFirewallRuleNoException
         }
     }
 
     # Separate context to avoid colliding mocks with "Yes" test case
-    Context "Telemetry 'Yes To All'" {
+    Context "Telemetry '$($Strings.YesToAll)'" {
         Mock Get-FirewallPackageFamilyName -MockWith { Throw "foo" }
 
         # There is an array of only one object provided.
         $mockFirewallObject = @{displayName = "foo"; description = "foo"; Profiles = 2; Action = 2; Direction = 2 }
         Mock Get-NetFirewallRule -MockWith { return @($mockFirewallObject) }
 
-        It "Should give ConvertToIntuneFirewallRule telemetry if given 'Yes To All'" {
+        It "Should give ConvertToIntuneFirewallRule telemetry if given '$($Strings.YesToAll)'" {
             Mock Test-IntuneFirewallRuleSplit -MockWith { Throw "Yes To All Error" }
             Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.YesToAll }
             Mock Send-ConvertToIntuneFirewallRuleTelemetry
@@ -131,14 +131,14 @@ Describe "ConvertTo-IntuneFirewallRule" {
     }
 
     # Separate context to avoid colliding mocks with "Yes" test case
-    Context "Telemetry 'Continue'" {
+    Context "Telemetry '$($Strings.Continue)'" {
         Mock Get-FirewallPackageFamilyName -MockWith { Throw "foo" }
 
         # There is an array of only one object provided.
         $mockFirewallObject = @{displayName = "foo"; description = "foo"; Profiles = 2; Action = 2; Direction = 2 }
         Mock Get-NetFirewallRule -MockWith { return @($mockFirewallObject) }
 
-        It "Should give ConvertToIntuneFirewallRule telemetry if given 'Continue'" {
+        It "Should give ConvertToIntuneFirewallRule telemetry if given '$($Strings.Continue)'" {
             Mock Test-IntuneFirewallRuleSplit -MockWith { Throw "Continue Error" }
             Mock Get-IntuneFirewallRuleErrorTelemetryChoice -MockWith { return $Strings.Continue }
             Mock Send-ConvertToIntuneFirewallRuleTelemetry
@@ -243,8 +243,8 @@ Describe "Get-FirewallService" {
         Get-FirewallServiceName "someObject" | Should -Be "foo"
     }
 
-    It "Should return an empty string if given 'Any'" {
-        Mock -CommandName "Get-NetFirewallServiceFilterWrapper" { return @{Service = "Any" } }
+    It "Should return an empty string if given '$($Strings.Any)'" {
+        Mock -CommandName "Get-NetFirewallServiceFilterWrapper" { return @{Service = $Strings.Any} }
         Get-FirewallServiceName "someObject" | Should -Be $null
     }
 }
@@ -296,7 +296,7 @@ Describe "Get-FirewallLocalPortRange" {
             Get-FirewallLocalPortRange "someObject" | Should -Be $null
         }
 
-        It "Should return empty array if given 'Any'" {
+        It "Should return empty array if given '$($Strings.Any)'" {
             Mock -CommandName Get-NetFirewallPortFilterWrapper -MockWith { return @{LocalPort = $Strings.Any } }
             Get-FirewallLocalPortRange "someObject" | Should -BeNullOrEmpty
         }
@@ -351,8 +351,8 @@ Describe "Get-FirewallRemotePortRange" {
             Get-FirewallRemotePortRange "someObject" | Should -Be $null
         }
 
-        It "Should return empty array if given 'Any'" {
-            Mock -CommandName Get-NetFirewallPortFilterWrapper -MockWith { return @{RemotePort = "Any" } }
+        It "Should return empty array if given '$($Strings.Any)'" {
+            Mock -CommandName Get-NetFirewallPortFilterWrapper -MockWith { return @{RemotePort = $Strings.Any } }
             Get-FirewallRemotePortRange "someObject" | Should -BeNullOrEmpty
         }
 
@@ -400,8 +400,8 @@ Describe "Get-FirewallRemotePortRange" {
 }
 
 Describe "Get-FirewallLocalAddressRange" {
-    It "Should return NULL if given 'Any'" {
-        Mock -CommandName Get-NetFirewallAddressFilterWrapper -MockWith { return @{LocalAddress = "Any" } }
+    It "Should return NULL if given '$($Strings.Any)'" {
+        Mock -CommandName Get-NetFirewallAddressFilterWrapper -MockWith { return @{LocalAddress = $Strings.Any } }
         Get-FirewallLocalAddressRange "someObject" | Should -BeNullOrEmpty
     }
 
@@ -417,8 +417,8 @@ Describe "Get-FirewallLocalAddressRange" {
 }
 
 Describe "Get-FirewallRemoteAddressRange" {
-    It "Should return NULL if given 'Any'" {
-        Mock -CommandName Get-NetFirewallAddressFilterWrapper -MockWith { return @{RemoteAddress = "Any" } }
+    It "Should return NULL if given '$($Strings.Any)'" {
+        Mock -CommandName Get-NetFirewallAddressFilterWrapper -MockWith { return @{RemoteAddress = $Strings.Any } }
         Get-FirewallRemoteAddressRange "someObject" | Should -Be $null
     }
 

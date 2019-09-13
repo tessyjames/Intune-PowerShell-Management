@@ -66,13 +66,15 @@ function Get-FirewallDisplayName {
     return $formattedDisplayName
 }
 
+# Due to the way package family names are stored in Windows, there is some preprocessing that has to
+# be done to avoid linear time lookups for the package family name.
 $packageFullNameToFamilyName = @{ }
 ForEach ($appPackage in Get-AppxPackage) {
     $packageFullNameToFamilyName.Set_Item($appPackage.PackageFullName, $appPackage.PackageFamilyName)
 }
 
 $packageSidLookup = @{ }
-# Package family names are represented internally as SIDs, which are not accepted by Intune.
+# Package family names are represented internally as package SIDs (Security Identifiers), which are not accepted by Intune.
 # These SIDs can be translated by digging into the registry at the provided location
 ForEach ($registryItem in Get-ChildItem -Path HKLM:\SOFTWARE\Microsoft\SecurityManager\CapAuthz\ApplicationsEx) {
     $packageFullName = $registryItem.Name -replace "^HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\SecurityManager\\CapAuthz\\ApplicationsEx\\", ""
@@ -104,6 +106,8 @@ function Get-FirewallPackageFamilyName {
         return $null
     }
 
+    # In scenarios where a package security identifier was found, but did not exist when we created the hash table,
+    # user interaction is required.
     If ($appFilterInstance.Package -and -not $packageSidLookup.ContainsKey($appFilterInstance.Package)) {
         $errorTitle = $Strings.FirewallRulePackageFamilyNameSidTitle
 
