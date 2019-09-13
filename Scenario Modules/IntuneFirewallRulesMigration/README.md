@@ -22,7 +22,7 @@ can be found [here](http://ramblingcookiemonster.github.io/Building-A-PowerShell
 
 ### Operating System
 
-The project has been developed and tested on Windows 10 1903.
+The project has been developed and tested on Windows 10 1903 and with PowerShell Version 5.1.18362.145.
 
 ### Dependencies
 
@@ -32,7 +32,9 @@ The project relies on the [Intune PowerShell SDK](https://github.com/Microsoft/I
 
 To import the module for each PowerShell session, you need to run `Import-Module`. You can import this project into your current PowerShell session by importing the module psm file:
 
-`Import-Module %ProjectRoot%\src\FirewallRulesMigration.psm1`
+```PowerShell
+Import-Module %ProjectRoot%\src\FirewallRulesMigration.psm1
+```
 
 where `%ProjectRoot%` represents the root directory for the project (where this README is stored).
 
@@ -46,22 +48,35 @@ To run unit tests for the entire project, you can simply run `Invoke-Pester .` i
 
 ### Examples
 
-For simple migration purposes for net firewall rules on the host, use `Export-NetFirewallRule`.
+For simple migration purposes for net firewall rules on the host, use this:
+
+```PowerShell
+Export-NetFirewallRule
+```
 
 Exporting from [Group Policy Object](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/Policy/group-policy-objects) Firewall Rules:
-`Export-NetFirewallRule -PolicyStoreSource GroupPolicy`
+
+```PowerShell
+Export-NetFirewallRule -PolicyStoreSource GroupPolicy
+```
 
 Exporting all of [Windows Defender Firewall with Advanced Security](https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-firewall/windows-firewall-with-advanced-security) rules:
 
-`Export-NetFirewallRule -PolicyStoreSource All`
+```PowerShell
+Export-NetFirewallRule -PolicyStoreSource All
+```
 
 By default, the `Export-NetFirewallRule` will also export all Windows Defender Firewall rules, so the following command also works:
 
-`Export-NetFirewallRule`
+```PowerShell
+Export-NetFirewallRule
+```
 
 Exporting firewall rules and then importing them into Intune should follow a conventional PowerShell pipeline workflow:
 
-`Export-NetFirewallRule | Send-IntuneFirewallRulesPolicy`
+```PowerShell
+Export-NetFirewallRule | Send-IntuneFirewallRulesPolicy
+```
 
 When the tool encounters unsupported scenarios, an interactive prompt may appear detailing it.
 The two most common scenarios are:
@@ -73,14 +88,20 @@ send telemetry data to Intune and automatically progress.
 
 Both of these options are supported as switch flags in all export firewall rule Cmdlets:
 
-`Export-NetFirewallRule -PolicyStoreSource GroupPolicy -splitConflictingAttributes -sendExportTelemetry`
+```PowerShell
+Export-NetFirewallRule -PolicyStoreSource GroupPolicy -splitConflictingAttributes -sendExportTelemetry
+```
 
-`Export-NetFirewallRule -splitConflictingAttributes -sendExportTelemetry`
+```PowerShell
+Export-NetFirewallRule -splitConflictingAttributes -sendExportTelemetry
+```
 
 If you would like to customize the prefix provided when migrating firewall rules to [new Intune profiles](https://docs.microsoft.com/en-us/intune/device-profile-create),
 you can use the `migratedProfileName` flag:
 
-`Send-IntuneFirewallRulesPolicy -migratedProfileName "foo"`
+```PowerShell
+Send-IntuneFirewallRulesPolicy -migratedProfileName "foo"
+```
 
 #### Advanced Uses
 
@@ -93,21 +114,31 @@ Look [here](https://docs.microsoft.com/en-us/powershell/module/netsecurity/Get-N
 
 If you would like to parse all firewall rules found in [WDFAS](https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-firewall/windows-firewall-with-advanced-security), you can leave out the policy store:
 
-`Get-NetFirewallRule | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy`
+```PowerShell
+Get-NetFirewallRule | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy
+```
 
 If instead you want to specify just GPO firewall rules to be parsed, you can do the following:
 
-`Get-NetFirewallRule -PolicyStore RSOP | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy`
+```PowerShell
+Get-NetFirewallRule -PolicyStore RSOP | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy
+```
 
 You can combine these with other standard PowerShell Cmdlets for filtering as well:
 
-`Get-NetFirewallRule -PolicyStore RSOP | ConvertTo-IntuneFirewallRule | Where-Object {$_.serviceName -ne "SomeUnwantedService"} | Send-IntuneFirewallRulesPolicy`
+```PowerShell
+Get-NetFirewallRule -PolicyStore RSOP | ConvertTo-IntuneFirewallRule | Where-Object {$_.serviceName -ne "SomeUnwantedService"} | Send-IntuneFirewallRulesPolicy
+```
 
-`Get-NetFirewallRule | Where-Object {$_.displayName -match "foo*"} | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy`
+```PowerShell
+Get-NetFirewallRule | Where-Object {$_.displayName -match "foo*"} | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy
+```
 
 Or perhaps you would like to see what is being sent to Intune before it's actually ran:
 
-`Get-NetFirewallRule -PolicyStore RSOP | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy -WhatIf`
+```PowerShell
+Get-NetFirewallRule -PolicyStore RSOP | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy -WhatIf
+```
 
 ### Telemetry
 

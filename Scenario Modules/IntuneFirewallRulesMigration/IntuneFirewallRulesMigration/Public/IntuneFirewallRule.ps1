@@ -37,6 +37,6 @@ function New-IntuneFirewallRule {
     [CmdletBinding(SupportsShouldProcess = $true)]
     Param()
     If ($PSCmdlet.ShouldProcess("", $Strings.NewIntuneFirewallRuleShouldProcessMessage)) {
-        return [IntuneFirewallRule]::New()
+        return New-Object -TypeName IntuneFirewallRule
     }
 }
