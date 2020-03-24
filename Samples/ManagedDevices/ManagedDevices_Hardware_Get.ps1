@@ -79,12 +79,12 @@ if($Devices){
     Write-Host "Device found:" $Device.deviceName -ForegroundColor Yellow
     Write-Host
 
-    $uri = "https://graph.microsoft.com/beta/deviceManagement/manageddevices('$DeviceID')?`$select=hardwareinformation,iccid,udid"
+    $uri = "https://graph.microsoft.com/beta/deviceManagement/manageddevices('$DeviceID')?`$select=hardwareinformation,iccid,udid,ethernetMacAddress"
     $DeviceInfo = Invoke-MSGraphRequest -Url $uri -HttpMethod Get
 
-    $DeviceNoHardware = $Device | select * -ExcludeProperty hardwareInformation,deviceActionResults,userId,imei,manufacturer,model,isSupervised,isEncrypted,serialNumber,meid,subscriberCarrier,iccid,udid
+    $DeviceNoHardware = $Device | select * -ExcludeProperty hardwareInformation,deviceActionResults,userId,imei,manufacturer,model,isSupervised,isEncrypted,serialNumber,meid,subscriberCarrier,iccid,udid,ethernetMacAddress
     $HardwareExcludes = $DeviceInfo.hardwareInformation | select * -ExcludeProperty sharedDeviceCachedUsers,phoneNumber
-    $OtherDeviceInfo = $DeviceInfo | select iccid,udid
+    $OtherDeviceInfo = $DeviceInfo | select iccid,udid,ethernetMacAddress
 
         $Object = New-Object System.Object
 
