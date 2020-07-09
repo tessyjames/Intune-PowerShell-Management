@@ -20,7 +20,7 @@ FirewallRulePackageFamilyNameDescription=The SID (Security Identifier) is used b
 FirewallRulePackageFamilyNameYes=Rename the package family name
 FirewallRulePackageFamilyNameNo=Stop processing this firewall rule and stop execution
 FirewallRulePackageFamilyNamePrompt=Enter the new package family name
-FirewallRulePackageFamilyNameException=User did not continue processing package family name
+FirewallRulePackageFamilyNameException=Package family name was not found
 FirewallRulePackageFamilyName=PackageFamilyName
 
 FirewallRuleProtocolException=Encountered error when parsing protocol: {0}
@@ -32,6 +32,7 @@ FirewallRulePortException=Encountered unexpected type when parsing port for fire
 FirewallRulePortRangeException=Encountered unexpected port range value when processing ports: {0}
 
 FirewallRuleAddressRangePlayToDeviceException=PlayToDevice is not supported by Intune
+FirewallRuleAddressRangeNoMatchException=The Address range {0} is not supported by Intune
 FirewallRuleAddressRange=AddressRange
 
 FirewallRuleProfileTypeException=Encountered unexpected profile type number: {0}
@@ -61,6 +62,10 @@ TelemetryError=Microsoft Telemetry Error
 TelemetryId=Telemetry Id
 TelemetryErrorTitle=Unhandled exception processing Intune Firewall Rule
 TelemetryErrorMessage=Encountered the following error:\n{0}\n{1}\nWould you like to send this error message to Microsoft to help us improve our product?
+TelemetryPromptTitle=Send Telemetry?
+TelemetryPromptMessage=If an error is discovered while importing the firewall rules, would you like to send this error message to Microsoft to help us improve our product?
+TelemetryPromptSendYes=Send the error message to Microsoft
+TelemetryPromptSendNo=Do not send anything
 TelemetryErrorExceptionType=Exception Type: {0}\n
 TelemetryErrorFirewallRuleProperty=Firewall Rule Property: {0}\n
 TelemetrySendErrorYes=Send the error message to Microsoft and continue
@@ -99,6 +104,10 @@ SendIntuneFirewallRulesPolicyProgressStatus=Importing profiles to Intune
 SendIntuneFirewallRulesPolicyShouldSendData=Sending profile data to Intune
 SendIntuneFirewallRulesPolicyException=User aborted error handling for Send-IntuneFirewallRulesPolicy
 
+#Validate Profile Name
+EnterProfile=Please enter a Profile name
+ProfileExists=The Profile name you provided already exists. Please enter a unique profile name
+ProfileCannotBeBlank =The profile name field cannot be blank. Please enter a valid profile name
 # General
 Any=Any
 Yes=Yes

@@ -18,7 +18,7 @@ ModuleVersion = '1.0'
 GUID = 'c2f80199-864d-4dec-8c16-ed4952f8853c'
 
 # Author of this module
-Author = 'Kevin Hui'
+Author = 'Kevin Hui and Tessy Emadoye'
 
 # Company or vendor of this module
 CompanyName = 'Microsoft'
@@ -30,7 +30,7 @@ Copyright = '(c) 2019 Microsoft. All rights reserved.'
 Description = 'PowerShell cmdlet suite to support automation of migrating Windows firewall rules to Microsoft Intune'
 
 # Modules that must be imported into the global environment prior to importing this module
-RequiredModules = @("Microsoft.Graph.Intune")
+RequiredModules = @("Microsoft.Graph.Intune", "ImportExcel")
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()
@@ -51,7 +51,7 @@ RequiredModules = @("Microsoft.Graph.Intune")
 # FunctionsToExport = 'Get-Function'
 
 # Cmdlets to export from this module
-CmdletsToExport = @('Export-NetFirewallRule', 'Send-IntuneFirewallRulesPolicy', 'ConvertTo-IntuneFirewallRule', 'New-IntuneFirewallRule')
+CmdletsToExport = @('Get-SampleFirewallData','Export-NetFirewallRule', 'Send-IntuneFirewallRulesPolicy', 'ConvertTo-IntuneFirewallRule', 'New-IntuneFirewallRule')
 
 # Variables to export from this module
 # VariablesToExport = '*'
