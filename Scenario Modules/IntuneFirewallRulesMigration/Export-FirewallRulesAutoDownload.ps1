@@ -1,13 +1,5 @@
 
 param([switch]$includeDisabledRules, [switch]$includeLocalRules)
-
-if (-not ( Test-Path -Path ".\Migration-Tool-master\IntuneFirewallRulesMigration\Private\strings.ps1")) {
-    Write-Host -ForegroundColor Red "Error:  Must run from script folder"
-    Write-Host "No commands completed"
-    return
-  }
-  
-   
   
   ## check for elevation   
    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
@@ -20,17 +12,16 @@ if (-not ( Test-Path -Path ".\Migration-Tool-master\IntuneFirewallRulesMigration
    }
 
 #----------------------------------------------------------------------------------------------C:\Users\t-oktess\Documents\powershellproject
-if(-not(Test-Path ".\Migration-Tool.zip")){
+if(-not(Test-Path ".\Intune-PowerShell-Management.zip")){
     #Download a zip file which has other required files from the public repo on github
-    Invoke-WebRequest -Uri "https://github.com/tessyjames/Migration-Tool/archive/master.zip" -OutFile ".\Migration-Tool.zip"
+    Invoke-WebRequest -Uri "https://github.com/tessyjames/Intune-PowerShell-Management/archive/master.zip" -OutFile ".\Intune-PowerShell-Management.zip"
 
     #Unblock the files especially since they are download from the internet
-    Get-ChildItem ".\Migration-Tool.zip" -Recurse -Force | Unblock-File
+    Get-ChildItem ".\Intune-PowerShell-Management.zip" -Recurse -Force | Unblock-File
 
     #Unzip the files into the current direectory
-    Expand-Archive -LiteralPath ".\Migration-Tool.zip" -DestinationPath ".\"
+    Expand-Archive -LiteralPath ".\Intune-PowerShell-Management.zip" -DestinationPath ".\"
 }
-
 #----------------------------------------------------------------------------------------------
 
 ## check for running from correct folder location
@@ -38,8 +29,8 @@ if(-not(Test-Path ".\Migration-Tool.zip")){
 
 
 
-Import-Module .\Migration-Tool-master\FirewallRulesMigration.psm1
-. ".\Migration-Tool-master\IntuneFirewallRulesMigration\Private\Strings.ps1"
+Import-Module ".\Intune-PowerShell-Management-master\Scenario Modules\IntuneFirewallRulesMigration\FirewallRulesMigration.psm1"
+. ".\Intune-PowerShell-Management-master\Scenario Modules\IntuneFirewallRulesMigration\IntuneFirewallRulesMigration\Private\Strings.ps1"
 
 $profileName = ""
 try
