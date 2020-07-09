@@ -167,9 +167,17 @@ a
                     # Intune Graph errors are telemetry points that can detect payload mistakes
                     $errorMessage = $_.ToString()
                     $errorType = $_.Exception.GetType().ToString()
-                    $choice = Get-IntuneFirewallRuleErrorTelemetryChoice -telemetryMessage $errorMessage `
+                    if($sendIntuneFirewallTelemetry)
+                    {
+                         $choice = Get-IntuneFirewallRuleErrorTelemetryChoice -telemetryMessage $errorMessage `
                         -sendErrorTelemetryInitialized $sendIntuneFirewallTelemetry `
                         -telemetryExceptionType $errorType
+                    }
+                    else
+                    {
+                         $choice = $Strings.Continue
+                    }
+                   
                     switch ($choice) {
                         $Strings.Yes { Send-IntuneFirewallGraphTelemetry -data $errorMessage }
                         $Strings.No { Throw $Strings.SendIntuneFirewallRulesPolicyException }

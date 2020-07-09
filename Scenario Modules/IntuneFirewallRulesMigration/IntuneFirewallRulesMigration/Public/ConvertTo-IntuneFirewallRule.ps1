@@ -179,10 +179,16 @@ function ConvertTo-IntuneFirewallRule {
                 $errorFirewallRuleProperty = $_.Exception.firewallRuleProperty
                 
                 #-----------------------------------------------------------------------------------------
-                $choice = Get-IntuneFirewallRuleErrorTelemetryChoice -telemetryMessage $errorMessage `
-                    -sendErrorTelemetryInitialized $sendConvertTelemetry `
-                    -telemetryExceptionType $errorType `
-                    -firewallRuleProperty $errorFirewallRuleProperty
+                if($sendIntuneFirewallTelemetry)
+                {
+                     $choice = Get-IntuneFirewallRuleErrorTelemetryChoice -telemetryMessage $errorMessage `
+                    -sendErrorTelemetryInitialized $sendIntuneFirewallTelemetry `
+                    -telemetryExceptionType $errorType
+                }
+                else
+                {
+                     $choice = $Strings.Continue
+                }
                 #------------------------------------------------------------------------------------------
                 # Choice is the index of the option
                 

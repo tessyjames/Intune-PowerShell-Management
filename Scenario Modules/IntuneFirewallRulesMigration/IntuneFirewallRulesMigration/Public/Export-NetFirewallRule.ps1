@@ -49,7 +49,7 @@ function Export-NetFirewallRule {
         # This determines if we are running a test version or a full importation. The default value is full. The test version imports only 20 rules
         [ValidateSet("Full","Test")]
         [String]
-        $Mode = "Test",
+        $Mode = "Full",
         [bool]
         $CheckProfileName = $true,
         # If this flag is toggled, then firewall rules with multiple attributes of filePath, serviceName,

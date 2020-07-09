@@ -129,7 +129,10 @@ function Get-SummaryDetail
     {
         Write-Host "Imported " $SummaryDetails.NumberofSucceededSent "/" $SummaryDetails.NumberofSplitRules "into the endpoint security firewallrule profile '"$SummaryDetails.ProfileName"'"
     }
-    Write-Host "See logs :" (Resolve-Path ".\logs") "for more information`r"
+    if(Test-Path ".\logs")
+    {
+        Write-Host "See logs :" (Resolve-Path ".\logs") "for more information`r"
+    }
 }
 
 function Set-SummaryDetail {
