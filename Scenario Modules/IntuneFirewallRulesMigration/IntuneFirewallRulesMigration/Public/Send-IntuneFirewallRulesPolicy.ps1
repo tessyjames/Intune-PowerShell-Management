@@ -95,14 +95,11 @@ a
         $dateformatted = Get-Date -Format "M_dd_yy"
         $responsePath = "./logs/http_response "+$dateformatted +".txt"
         $payloadPath =  "./logs/http_payload "+$dateformatted +".txt"
-        if(-not(Test-Path $responsePath))
+        if(-not(Test-Path "./logs"))
         {
-           $item =  New-Item $responsePath
+           $item = New-Item "./logs" -ItemType Directory
         }
-        if(-not(Test-Path $payloadPath))
-        {
-            $item = New-Item $payloadPath
-        }
+       
         ForEach ($profile in $profiles) {
             # remainingProfiles is decremented after displaying operation status
             $remainingProfiles = Show-OperationProgress `
