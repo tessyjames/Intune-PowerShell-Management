@@ -1,4 +1,4 @@
-function Get-SampleFirewallData{
+function Get-FirewallData{
      <#
     .SYNOPSIS
     Gets a sample collection of firewall rules
