@@ -14,7 +14,7 @@ param([switch]$includeDisabledRules, [switch]$includeLocalRules)
 #----------------------------------------------------------------------------------------------C:\Users\t-oktess\Documents\powershellproject
 if(-not(Test-Path ".\Intune-PowerShell-Management.zip")){
     #Download a zip file which has other required files from the public repo on github
-    Invoke-WebRequest -Uri "https://github.com/tessyjames/Intune-PowerShell-Management/archive/master.zip" -OutFile ".\Intune-PowerShell-Management.zip"
+    Invoke-WebRequest -Uri "https://github.com/microsoft/Intune-PowerShell-Management/archive/master.zip" -OutFile ".\Intune-PowerShell-Management.zip"
 
     #Unblock the files especially since they are download from the internet
     Get-ChildItem ".\Intune-PowerShell-Management.zip" -Recurse -Force | Unblock-File
