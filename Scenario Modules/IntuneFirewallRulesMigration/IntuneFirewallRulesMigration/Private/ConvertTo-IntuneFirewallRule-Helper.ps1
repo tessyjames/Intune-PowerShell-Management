@@ -109,28 +109,6 @@ function Get-FirewallPackageFamilyName {
     # In scenarios where a package security identifier was found, but did not exist when we created the hash table,
     # user interaction is required.
     If ($appFilterInstance.Package -and -not $packageSidLookup.ContainsKey($appFilterInstance.Package)) {
-        <#$errorTitle = $Strings.FirewallRulePackageFamilyNameSidTitle
-
-        $uniqueName = $Strings.FirewallRulePackageFamilyNameUniqueName -f $firewallObject.Name
-        $packageSid = $Strings.FirewallRulePackageFamilyNameSid -f $appFilterInstance.Package
-        $errorMessage = $Strings.FirewallRulePackageFamilyNameSidMessage -f ($firewallObject.displayName, `
-                $uniqueName, `
-                $packageSid, `
-                $Strings.FirewallRulePackageFamilyNameDescription)
-
-        $yes = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", $Strings.FirewallRulePackageFamilyNameYes
-        $no = New-Object System.Management.Automation.Host.ChoiceDescription "&No", $Strings.FirewallRulePackageFamilyNameNo
-        $errorOptions = [System.Management.Automation.Host.ChoiceDescription[]]($yes, $no)
-
-        $choice = Get-UserPrompt -promptTitle $errorTitle `
-            -promptMessage $errorMessage `
-            -promptOptions $errorOptions `
-            -defaultOption 0
-
-        # Choice is the index of the option
-        Switch ($choice) {
-            0 { return Read-Host -Prompt $Strings.FirewallRulePackageFamilyNamePrompt }
-            1 { Throw [ExportFirewallRuleException]::new($Strings.FirewallRulePackageFamilyNameException, $Strings.FirewallRulePackageFamilyName) }#>
             Throw [ExportFirewallRuleException]::new($Strings.FirewallRulePackageFamilyNameException, $Strings.FirewallRulePackageFamilyName)
         
     }
