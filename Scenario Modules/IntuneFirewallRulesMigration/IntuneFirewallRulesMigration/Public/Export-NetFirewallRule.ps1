@@ -118,7 +118,7 @@ function Export-NetFirewallRule {
 
         
             # The default behavior for Get-NetFirewallRule is to retrieve all WDFWAS firewall rules
-        return $(Get-SampleFirewallData -Enabled:$EnabledOnly -Mode:$Mode -PolicyStoreSource:$PolicyStoreSource| ConvertTo-IntuneFirewallRule `
+        return $(Get-FirewallData -Enabled:$EnabledOnly -Mode:$Mode -PolicyStoreSource:$PolicyStoreSource| ConvertTo-IntuneFirewallRule `
                 -doNotsplitConflictingAttributes:$doNotsplitConflictingAttributes `
                 -sendConvertTelemetry:$sendExportTelemetry `
                 -DeviceConfiguration:$DeviceConfiguration `
