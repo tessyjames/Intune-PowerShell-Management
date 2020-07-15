@@ -123,11 +123,11 @@ function Get-SummaryDetail
     Write-Host "`rSummary Details`r"
     if([int]$SummaryDetails.NumberofSucceededSent -eq [int]$SummaryDetails.NumberofSplitRules)
     {
-        Write-Host "Imported " $SummaryDetails.NumberofSuccessfulConvertedRules "/" $SummaryDetails.NumberofFirewallRules "into the endpoint security firewallrule profile '"$SummaryDetails.ProfileName"'"
+        Write-Host "Imported " $SummaryDetails.NumberofSuccessfulConvertedRules "/" $SummaryDetails.NumberofFirewallRules "into the Endpoint Security Firewall Rule Profile '"$SummaryDetails.ProfileName"'"
     }
     else
     {
-        Write-Host "Imported " $SummaryDetails.NumberofSucceededSent "/" $SummaryDetails.NumberofSplitRules "into the endpoint security firewallrule profile '"$SummaryDetails.ProfileName"'"
+        Write-Host "Imported " $SummaryDetails.NumberofSucceededSent "/" $SummaryDetails.NumberofSplitRules "into the Endpoint Security Firewallrule Profile '"$SummaryDetails.ProfileName"'"
     }
     if(Test-Path ".\logs")
     {
