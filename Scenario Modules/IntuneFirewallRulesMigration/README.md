@@ -28,6 +28,12 @@ The project has been developed and tested on Windows 10 1903 and with PowerShell
 
 The project relies on the [Intune PowerShell SDK](https://github.com/Microsoft/Intune-PowerShell-SDK) for submitting Graph API calls, and will require users to [install the SDK](https://github.com/Microsoft/Intune-PowerShell-SDK#getting-started).
 
+The project also relies on the [ImportExcel Module](https://github.com/dfinke/ImportExcel) Module which can be installed from the PowerShell Galley(https://github.com/dfinke/ImportExcel)
+
+ ```PowerShell
+ Install-Module ImportExcel
+ ```
+
 ### Importing the module
 
 To import the module for each PowerShell session, you need to run `Import-Module`. You can import this project into your current PowerShell session by importing the module psm file:
@@ -72,12 +78,16 @@ By default, the `Export-NetFirewallRule` will also export all Windows Defender F
 Export-NetFirewallRule
 ```
 
-Exporting firewall rules and then importing them into Intune should follow a conventional PowerShell pipeline workflow:
+Exporting firewall rules and then importing them into Intune Endpoint Security should follow a conventional PowerShell pipeline workflow:
 
 ```PowerShell
 Export-NetFirewallRule | Send-IntuneFirewallRulesPolicy
 ```
+Exporting firewall rules and then importing them into Intune (Device Configuration) should have the -DeviceConfiguration switch flags included:
 
+```PowerShell
+Export-NetFirewallRule -DeviceConfiguration | Send-IntuneFirewallRulesPolicy -DeviceConfiguration
+```
 When the tool encounters unsupported scenarios, an interactive prompt may appear detailing it.
 The two most common scenarios are:
 

@@ -1,4 +1,5 @@
 . "$PSScriptRoot\IntuneFirewallRule.ps1"
+. "$PSScriptRoot\ExportTo-ExcelFile.ps1"
 . "$PSScriptRoot\..\Private\ConvertTo-IntuneFirewallRule-Helper.ps1"
 . "$PSScriptRoot\..\Private\Process-IntuneFirewallRules.ps1"
 . "$PSScriptRoot\..\Private\Send-Telemetry.ps1"
@@ -46,13 +47,17 @@ function ConvertTo-IntuneFirewallRule {
         $incomingFirewallRules,
         # If this flag is toggled, then firewall rules with multiple attributes of filePath, serviceName,
         # or packageFamilyName will automatically be processed and split instead of prompting users to split
-        [switch] $splitConflictingAttributes,
+        [switch] $doNotSplitConflictingAttributes,
         # If this flag is toggled, then telemetry is automatically sent to Microsoft.
-        [switch] $sendConvertTelemetry
+        [switch] $sendConvertTelemetry,
+        [switch] $DeviceConfiguration
+       
     )
 
     Begin {
         $firewallRules = @()
+        $rulesFailedToConvert = @()
+        
     }
 
     Process {
@@ -66,6 +71,7 @@ function ConvertTo-IntuneFirewallRule {
         $intuneFirewallRuleObjects = @()
 
         $remainingFirewallRules = $firewallRules.Count
+       
         ForEach ($firewallRule in $firewallRules) {
             Try {
                 # remainingFirewallRules is decremented after displaying operation status
@@ -73,60 +79,119 @@ function ConvertTo-IntuneFirewallRule {
                     -remainingObjects $remainingFirewallRules `
                     -totalObjects $firewallRules.Count `
                     -activityMessage $Strings.ConvertToIntuneFirewallRuleProgressMessage
+               
+                
+                if($DeviceConfiguration){
+                    # Processing firewall rule objects for endpoint security
+                    $intuneFirewallRuleObject = New-IntuneFirewallRuleDC
+                    # All of the attributes needed for firewall can be found, but they are typically scattered
+                    # by multiple cmdlet filters. Look in the link provided for more information
+                    $intuneFirewallRuleObject.displayName = Get-FirewallDisplayName $firewallRule
+                    $intuneFirewallRuleObject.description = $firewallRule.description
+                    $intuneFirewallRuleObject.packageFamilyName = Get-FirewallPackageFamilyName $firewallRule
+                    $intuneFirewallRuleObject.filePath = Get-FirewallFilePath $firewallRule
+                    $intuneFirewallRuleObject.serviceName = Get-FirewallServiceName $firewallRule
+                    $intuneFirewallRuleObject.protocol = Get-FirewallProtocol $firewallRule
+                    $intuneFirewallRuleObject.localPortRanges = Get-FirewallLocalPortRange $firewallRule
+                    $intuneFirewallRuleObject.remotePortRanges = Get-FirewallRemotePortRange $firewallRule
+                    $intuneFirewallRuleObject.localAddressRanges = Get-FirewallLocalAddressRange $firewallRule
+                    $intuneFirewallRuleObject.remoteAddressRanges = Get-FirewallRemoteAddressRange $firewallRule
+                    $intuneFirewallRuleObject.profileTypes = Get-FirewallProfileTypeDC $firewallRule.Profiles
+                    $intuneFirewallRuleObject.action = Get-FirewallAction $firewallRule.Action
+                    $intuneFirewallRuleObject.trafficDirection = Get-FirewallDirection $firewallRule.Direction
+                    $intuneFirewallRuleObject.interfaceTypes = Get-FirewallInterfaceType $firewallRule
+                    $intuneFirewallRuleObject.localUserAuthorizations = Get-FirewallLocalUserAuthorization $firewallRule
+                    $intuneFirewallRuleObject.edgeTraversal = Get-FirewallEdgeTraversalPolicy $firewallRule
 
-                # Processing firewall rule objects
-                $intuneFirewallRuleObject = New-IntuneFirewallRule
-                # All of the attributes needed for firewall can be found, but they are typically scattered
-                # by multiple cmdlet filters. Look in the link provided for more information
-                $intuneFirewallRuleObject.displayName = Get-FirewallDisplayName $firewallRule
-                $intuneFirewallRuleObject.description = $firewallRule.description
-                $intuneFirewallRuleObject.packageFamilyName = Get-FirewallPackageFamilyName $firewallRule
-                $intuneFirewallRuleObject.filePath = Get-FirewallFilePath $firewallRule
-                $intuneFirewallRuleObject.serviceName = Get-FirewallServiceName $firewallRule
-                $intuneFirewallRuleObject.protocol = Get-FirewallProtocol $firewallRule
-                $intuneFirewallRuleObject.localPortRanges = Get-FirewallLocalPortRange $firewallRule
-                $intuneFirewallRuleObject.remotePortRanges = Get-FirewallRemotePortRange $firewallRule
-                $intuneFirewallRuleObject.localAddressRanges = Get-FirewallLocalAddressRange $firewallRule
-                $intuneFirewallRuleObject.remoteAddressRanges = Get-FirewallRemoteAddressRange $firewallRule
-                $intuneFirewallRuleObject.profileTypes = Get-FirewallProfileType $firewallRule.Profiles
-                $intuneFirewallRuleObject.action = Get-FirewallAction $firewallRule.Action
-                $intuneFirewallRuleObject.trafficDirection = Get-FirewallDirection $firewallRule.Direction
-                $intuneFirewallRuleObject.interfaceTypes = Get-FirewallInterfaceType $firewallRule
-                $intuneFirewallRuleObject.localUserAuthorizations = Get-FirewallLocalUserAuthorization $firewallRule
-                $intuneFirewallRuleObject.edgeTraversal = Get-FirewallEdgeTraversalPolicy $firewallRule
+                    If (Test-IntuneFirewallRuleSplitDC -firewallObject $intuneFirewallRuleObject) {
 
-                # Check to see if a firewall rule needs to be split, and prompts the user if they want to split
-                If (Test-IntuneFirewallRuleSplit -firewallObject $intuneFirewallRuleObject) {
-                    $splitFirewallRuleChoice = Get-SplitIntuneFirewallRuleChoice `
-                        -splitConflictingAttributes $splitConflictingAttributes `
-                        -firewallObject $intuneFirewallRuleObject
-                    $splittedFirewallRuleObjects = Split-IntuneFirewallRule -firewallObject $intuneFirewallRuleObject
-                    Switch ($splitFirewallRuleChoice) {
-                        $Strings.Yes { $intuneFirewallRuleObjects += $splittedFirewallRuleObjects }
-                        $Strings.No { Throw $Strings.ConvertToIntuneFirewallRuleNoSplit }
-                        $Strings.YesToAll {
-                            $intuneFirewallRuleObjects += $splittedFirewallRuleObjects
-                            # Allows future splitting operations to continue without user prompt
-                            $splitConflictingAttributes = $true
+                        $splitFirewallRuleChoice = Get-SplitIntuneFirewallRuleChoiceDC `
+                            -splitConflictingAttributes $doNotsplitConflictingAttributes `
+                            -firewallObject $intuneFirewallRuleObject
+                        $splittedFirewallRuleObjects = Split-IntuneFirewallRuleDC -firewallObject $intuneFirewallRuleObject
+                        Switch ($splitFirewallRuleChoice) {
+                            $Strings.Yes { $intuneFirewallRuleObjects += $splittedFirewallRuleObjects }
+                            $Strings.No { Throw $Strings.ConvertToIntuneFirewallRuleNoSplit }
+                            $Strings.YesToAll {
+                                $intuneFirewallRuleObjects += $splittedFirewallRuleObjects
+                                # Allows future splitting operations to continue without user prompt
+                                $doNotsplitConflictingAttributes = $false
+                            }
+                            $Strings.Continue { continue }
                         }
-                        $Strings.Continue { continue }
                     }
+                    Else {
+                        $intuneFirewallRuleObjects += $intuneFirewallRuleObject
+                    }
+
                 }
-                Else {
-                    $intuneFirewallRuleObjects += $intuneFirewallRuleObject
+                else{
+                    # Processing firewall rule objects for endpoint security
+                    $intuneFirewallRuleObject = New-IntuneFirewallRule
+                    # All of the attributes needed for firewall can be found, but they are typically scattered
+                    # by multiple cmdlet filters. Look in the link provided for more information
+                    $intuneFirewallRuleObject.displayName = Get-FirewallDisplayName $firewallRule
+                    $intuneFirewallRuleObject.description = $firewallRule.description
+                    $intuneFirewallRuleObject.packageFamilyName = Get-FirewallPackageFamilyName $firewallRule
+                    $intuneFirewallRuleObject.filePath = Get-FirewallFilePath $firewallRule
+                    $intuneFirewallRuleObject.serviceName = Get-FirewallServiceName $firewallRule
+                    $intuneFirewallRuleObject.protocol = Get-FirewallProtocol $firewallRule
+                    $intuneFirewallRuleObject.localPortRanges = Get-FirewallLocalPortRange $firewallRule
+                    $intuneFirewallRuleObject.remotePortRanges = Get-FirewallRemotePortRange $firewallRule
+                    $intuneFirewallRuleObject.actualLocalAddressRanges = Get-FirewallLocalAddressRange $firewallRule
+                    $intuneFirewallRuleObject.actualRemoteAddressRanges = Get-FirewallRemoteAddressRange $firewallRule
+                    $intuneFirewallRuleObject.profileTypes = Get-FirewallProfileType $firewallRule.Profiles
+                    $intuneFirewallRuleObject.action = Get-FirewallAction $firewallRule.Action
+                    $intuneFirewallRuleObject.trafficDirection = Get-FirewallDirection $firewallRule.Direction
+                    $intuneFirewallRuleObject.interfaceTypes = Get-FirewallInterfaceType $firewallRule
+                    $intuneFirewallRuleObject.localUserAuthorizations = Get-FirewallLocalUserAuthorization $firewallRule
+                    $intuneFirewallRuleObject.useAnyLocalAddressRange = Get-useAnyLocalAddressRangeOption $firewallRule
+                    $intuneFirewallRuleObject.useAnyRemoteAddressRange = Get-useAnyRemoteAddressRangeOption $firewallRule
+                
+                    # Check to see if a firewall rule needs to be split, and prompts the user if they want to split
+                    If (Test-IntuneFirewallRuleSplit -firewallObject $intuneFirewallRuleObject) {
+
+                        $splitFirewallRuleChoice = Get-SplitIntuneFirewallRuleChoice `
+                            -splitConflictingAttributes $doNotSplitConflictingAttributes `
+                            -firewallObject $intuneFirewallRuleObject
+                        $splittedFirewallRuleObjects = Split-IntuneFirewallRule -firewallObject $intuneFirewallRuleObject
+                        Switch ($splitFirewallRuleChoice) {
+                            $Strings.Yes { $intuneFirewallRuleObjects += $splittedFirewallRuleObjects }
+                            $Strings.No { Throw $Strings.ConvertToIntuneFirewallRuleNoSplit }
+                            $Strings.YesToAll {
+                                $intuneFirewallRuleObjects += $splittedFirewallRuleObjects
+                                # Allows future splitting operations to continue without user prompt
+                                $doNotSplitConflictingAttributes = $false
+                            }
+                            $Strings.Continue { continue }
+                        }
+                    }
+                    Else {
+                        $intuneFirewallRuleObjects += $intuneFirewallRuleObject
+                    }
                 }
             }
             Catch {
+               
                 $errorMessage = $_.ToString()
                 $errorType = $_.Exception.GetType().ToString()
                 # If the property does not exist, then the result is simply an empty string
                 $errorFirewallRuleProperty = $_.Exception.firewallRuleProperty
-
-                $choice = Get-IntuneFirewallRuleErrorTelemetryChoice -telemetryMessage $errorMessage `
-                    -sendErrorTelemetryInitialized $sendConvertTelemetry `
-                    -telemetryExceptionType $errorType `
-                    -firewallRuleProperty $errorFirewallRuleProperty
+                
+                #-----------------------------------------------------------------------------------------
+                if($sendIntuneFirewallTelemetry)
+                {
+                     $choice = Get-IntuneFirewallRuleErrorTelemetryChoice -telemetryMessage $errorMessage `
+                    -sendErrorTelemetryInitialized $sendIntuneFirewallTelemetry `
+                    -telemetryExceptionType $errorType
+                }
+                else
+                {
+                     $choice = $Strings.Continue
+                }
+                #------------------------------------------------------------------------------------------
                 # Choice is the index of the option
+                
                 Switch ($choice) {
                     $Strings.Yes {
                         Send-ConvertToIntuneFirewallRuleTelemetry -data $errorMessage `
@@ -142,8 +207,21 @@ function ConvertTo-IntuneFirewallRule {
                     }
                     $Strings.Continue { continue }
                 }
+                # Add items that failed to be formatted to a collection of objects to be exported to an excel file
+                $newExcelObject = New-Object -TypeName ExcelFormat
+                $newExcelObject.displayName = $firewallRule.DisplayName
+                $newExcelObject.description = $firewallRule.Description
+                $newExcelObject.trafficDirection   = $firewallRule.Direction
+                $newExcelObject.action = $firewallRule.Action
+                $newExcelObject.errorMessage = $errorMessage
+                $rulesFailedToConvert += $newExcelObject
             }
         }
+       
+       # Create an excel file with information about the items that where incompatible with intunes format
+        Export-ExcelFile -fileName "RuleError" -failedToConvert $rulesFailedToConvert 
+        Set-SummaryDetail -numberOfFirewallRules $firewallRules.Count -ConvertedRulesNumber ($firewallRules.Count - $rulesFailedToConvert.Count )
+        
         return $intuneFirewallRuleObjects
     }
 }

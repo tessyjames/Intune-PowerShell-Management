@@ -69,7 +69,7 @@ function Get-FirewallDisplayName {
 # Due to the way package family names are stored in Windows, there is some preprocessing that has to
 # be done to avoid linear time lookups for the package family name.
 $packageFullNameToFamilyName = @{ }
-ForEach ($appPackage in Get-AppxPackage) {
+ForEach ($appPackage in Get-AppxPackage -AllUsers) {
     $packageFullNameToFamilyName.Set_Item($appPackage.PackageFullName, $appPackage.PackageFamilyName)
 }
 
@@ -109,29 +109,8 @@ function Get-FirewallPackageFamilyName {
     # In scenarios where a package security identifier was found, but did not exist when we created the hash table,
     # user interaction is required.
     If ($appFilterInstance.Package -and -not $packageSidLookup.ContainsKey($appFilterInstance.Package)) {
-        $errorTitle = $Strings.FirewallRulePackageFamilyNameSidTitle
-
-        $uniqueName = $Strings.FirewallRulePackageFamilyNameUniqueName -f $firewallObject.Name
-        $packageSid = $Strings.FirewallRulePackageFamilyNameSid -f $appFilterInstance.Package
-        $errorMessage = $Strings.FirewallRulePackageFamilyNameSidMessage -f ($firewallObject.displayName, `
-                $uniqueName, `
-                $packageSid, `
-                $Strings.FirewallRulePackageFamilyNameDescription)
-
-        $yes = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes", $Strings.FirewallRulePackageFamilyNameYes
-        $no = New-Object System.Management.Automation.Host.ChoiceDescription "&No", $Strings.FirewallRulePackageFamilyNameNo
-        $errorOptions = [System.Management.Automation.Host.ChoiceDescription[]]($yes, $no)
-
-        $choice = Get-UserPrompt -promptTitle $errorTitle `
-            -promptMessage $errorMessage `
-            -promptOptions $errorOptions `
-            -defaultOption 0
-
-        # Choice is the index of the option
-        Switch ($choice) {
-            0 { return Read-Host -Prompt $Strings.FirewallRulePackageFamilyNamePrompt }
-            1 { Throw [ExportFirewallRuleException]::new($Strings.FirewallRulePackageFamilyNameException, $Strings.FirewallRulePackageFamilyName) }
-        }
+            Throw [ExportFirewallRuleException]::new($Strings.FirewallRulePackageFamilyNameException, $Strings.FirewallRulePackageFamilyName)
+        
     }
     return $packageSidLookup[$appFilterInstance.Package]
 }
@@ -241,8 +220,9 @@ function Get-FirewallLocalPortRange {
     )
 
     $portFilter = Get-NetFirewallPortFilterWrapper -AssociatedNetFirewallRule $firewallObject
-    return Get-FirewallPortRangeHelper -portInstance $portFilter.LocalPort -exportType $Strings.FirewallRuleLocalPort
+    return Get-FirewallPortRangeHelper -portInstance $portFilter.LocalPort -exportType $Strings.FirewallRuleLocalPort -protocol $portFilter.Protocol
 }
+
 
 function Get-FirewallRemotePortRange {
     <#
@@ -262,7 +242,7 @@ function Get-FirewallRemotePortRange {
     )
 
     $portFilter = Get-NetFirewallPortFilterWrapper -AssociatedNetFirewallRule $firewallObject
-    return Get-FirewallPortRangeHelper -portInstance $portFilter.RemotePort -exportType $Strings.FirewallRuleRemotePort
+    return Get-FirewallPortRangeHelper -portInstance $portFilter.RemotePort -exportType $Strings.FirewallRuleRemotePort -protocol $portFilter.Protocol
 }
 
 function Get-FirewallPortRangeHelper {
@@ -284,19 +264,21 @@ function Get-FirewallPortRangeHelper {
         [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [String]
-        $exportType
+        $exportType,
+        [string]
+        $protocol
     )
 
     If ($null -eq $portInstance) {
         return $null
     }
     If ($portInstance -is [String]) {
-        return Get-FirewallPortRangeMapping -port $portInstance -exportType $exportType
+        return Get-FirewallPortRangeMapping -port $portInstance -exportType $exportType -protocol $protocol
     }
     If ($portInstance -is [Array]) {
         $portArray = @()
         ForEach ($instance in $portInstance) {
-            $portArray += Get-FirewallPortRangeMapping $instance -exportType $exportType
+            $portArray += Get-FirewallPortRangeMapping $instance -exportType $exportType -protocol $protocol
         }
         return $portArray
     }
@@ -327,25 +309,50 @@ function Get-FirewallPortRangeMapping {
         [Parameter(Mandatory = $true)]
         [AllowEmptyString()]
         [String]
-        $exportType
+        $exportType,
+        [String]
+        $protocol
     )
-
-    If ($port -eq "") {
-        return $null
+    # only rules using TCP and UDP protocol can have port numbers on intune 
+    # https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
+    if($protocol -eq "TCP" -or $protocol -eq "UDP"){
+        If ($port -eq "") {
+            return $null
+        }
+        # We interpret "Any" to be an empty array, with no restrictions on the ports
+        If ($port -eq $Strings.Any) {
+            return , @()
+        }
+        # Ports that match "xxx", where x is a digit, are acceptable
+        If ($port -match "^\d+$") {
+            return $port
+        }
+        # Ports that match a string containing "xxx-xxx", where x is a digit, are acceptable
+        If ($port -match "^\d+-\d+$") {
+            return $port
+        }
+        # Ports that match RPC-EPMAP are assigned a default port of 135
+        if ($port -match "rpcepmap"){
+            return "135"
+        }
+        # Ports that match RPC are assigned a default dynamic port range of 49152 - 65535
+        if ($port -match "rpc"){
+            return "49152-65535"
+        }
+        # Ports that match Teredo are assigned a default port of 3544
+        if ($port -match "teredo*"){
+            return "3544"
+        }
+        if($port -match "iphttps*"){
+            return "443"
+        }
     }
-    # We interpret "Any" to be an empty array, with no restrictions on the ports
-    If ($port -eq $Strings.Any) {
-        return , @()
+    # The UI does not permit any protocol outside of TCP and UDP to have port ranges
+    elseif($protocol)
+    {
+        return @()
     }
-    # Ports that match "xxx", where x is a digit, are acceptable
-    If ($port -match "^\d+$") {
-        return $port
-    }
-    # Ports that match a string containing "xxx-xxx", where x is a digit, are acceptable
-    If ($port -match "^\d+-\d+$") {
-        return $port
-    }
-    # There were a few strings such as 'RPC', 'RPC-EPM', 'Teredo', and 'IHTTPSIn', which are currently corner cases
+    
     # Any other type of strings may also be encountered that may not be supported by Graph
     Throw [ExportFirewallRuleException]::new($($Strings.FirewallRulePortRangeException -f $port), $exportType)
 }
@@ -391,9 +398,157 @@ function Get-FirewallRemoteAddressRange {
         $firewallObject
     )
     $addressFilter = Get-NetFirewallAddressFilterWrapper -AssociatedNetFirewallRule $firewallObject
-    return Get-FirewallAddressRange -addressRange $addressFilter.RemoteAddress
+    $remoteAddress =  Get-FirewallAddressRange -addressRange $addressFilter.RemoteAddress
+    if($remoteAddress){
+        return Test-FirewallRemoteAddressRange $remoteAddress
+    }
+    else{
+        return $remoteAddress
+    }
 }
 
+function Get-useAnyRemoteAddressRangeOption{
+    <#
+    .SYNOPSIS
+    Returns a boolean that shows if any remote address range option is selected
+    .EXAMPLE
+        Get-useAnyRemoteAddressRangeOption -firewallObject $firewallObject
+    .PARAMETER firewallObject The firewall object.
+    .OUTPUTS
+    boolean
+    .LINK
+    https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
+    #>
+    Param(
+        [Parameter(Mandatory = $true)]
+        $firewallObject
+    )
+    $addressFilter = Get-NetFirewallAddressFilterWrapper -AssociatedNetFirewallRule $firewallObject  
+
+    if(Get-FirewallAddressRange -addressRange $addressFilter.RemoteAddress)
+    {
+        return $false
+    }
+    else
+    {
+        return $true
+    }
+
+}
+
+function Get-useAnyLocalAddressRangeOption{
+    <#
+    .SYNOPSIS
+    Returns a boolean that shows if any remote address range option is selected
+    .EXAMPLE
+        Get-useAnyRemoteAddressRangeOption -firewallObject $firewallObject
+    .PARAMETER firewallObject The firewall object.
+    .OUTPUTS
+    boolean
+    .LINK
+    https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
+    #>
+    Param(
+        [Parameter(Mandatory = $true)]
+        $firewallObject
+    )
+    $addressFilter = Get-NetFirewallAddressFilterWrapper -AssociatedNetFirewallRule $firewallObject  
+      
+    if(Get-FirewallAddressRange -addressRange $addressFilter.LocalAddress)
+    {
+        return $false
+    }
+    else
+    {
+        return $true
+    }
+}
+
+function Test-FirewallRemoteAddressRange{
+     <#
+    .SYNOPSIS
+    Test the address ranges to ensure that they are compatible with intune format
+    Address ranges that are allowed on intune are: 
+    "Defaultgateway"
+    "DHCP"
+    "DNS"
+    "WINS"
+    "Intranet"
+    "RmtIntranet"
+    "Internet"
+    "Ply2Renders"
+    "LocalSubnet" indicates any local address on the local subnet. This token is not case-sensitive.
+    A subnet can be specified using either the subnet mask or network prefix notation. If neither a subnet mask not a network prefix is specified, the subnet mask defaults to 255.255.255.255.
+    A valid IPv6 address.
+    An IPv4 address range in the format of "start address - end address" with no spaces included.
+    An IPv6 address range in the format of "start address - end address" with no spaces included.
+    .EXAMPLE
+    Test-AddressRangeHelper -addressRange "192.168.92.232"
+    .PARAMETER addressRange the string that represents a range of addresses
+    .OUTPUTS
+    String
+    .LINK
+    https://docs.microsoft.com/en-us/windows/client-management/mdm/firewall-csp
+    https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
+    #>
+    Param(
+        [Parameter(Mandatory = $true)]
+        $addressRange
+    )
+    $allowedAddress = @("Defaultgateway", "DHCP", "DNS", "WINS", "Intranet", "RmtIntranet", "Internet", "Ply2Renders", "LocalSubnet")
+    $addressSet = New-Object -TypeName 'System.Collections.Generic.HashSet[String]' -ArgumentList (, [String[]]$allowedAddress)
+    if($addressRange -is [String]){
+         #Check the address if it is one of the addresses in the list of suitable addresses in the allowedAddress set
+       if($addressSet -ccontains $addressRange){
+           return $addressRange
+       }
+       else{
+           #Test the address if it is an IPV6 or IPV4 address
+           $addressArray = $addressRange.Split('/')
+           try{
+                $result = $addressArray[0] -match [IpAddress]$addressArray[0]
+                
+           }
+           catch{
+                Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleAddressRangeNoMatchException -f $addressRange), $Strings.FirewallRuleAddressRange) 
+                $result = $false
+
+           }
+           if($result){
+                return $addressRange
+           }
+       }
+    }
+    if($addressRange -is [array]){
+        $newaddressRange = @()
+        foreach($address in $addressRange)
+        {
+            #Check the address if it is one of the addresses in the list of suitable addresses in the allowedAddress set
+            if($addressSet -ccontains $address){
+                $newaddressRange += $address
+            }
+            else{
+                #Test the address if it is an IPV6 or IPV4 address
+                $addressArray = $address.Split('/')
+                try{
+                     $result = $addressArray[0] -match [IpAddress]$addressArray[0]
+                     
+                }
+                catch{
+                     Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleAddressRangeNoMatchException -f $addressRange), $Strings.FirewallRuleAddressRange) 
+                     $result = $false
+                     break
+                }
+
+                if($result){
+                    $newaddressRange += $address
+                }
+            }
+
+        }
+        return $newaddressRange
+    }
+}
 function Get-FirewallAddressRange {
     <#
     .SYNOPSIS
@@ -419,11 +574,10 @@ function Get-FirewallAddressRange {
         default { return $addressRange }
     }
 }
-
-function Get-FirewallProfileType {
+function Get-FirewallProfileTypeDC {
     <#
     .SYNOPSIS
-    # Convert the profile types into a string for firewall rules
+    # Convert the profile types into a string for firewall rules for Device Configuration
     .EXAMPLE
     Get-FirewallProfileType -profileTypes 0
     Get-FirewallProfileType -profileTypes 1
@@ -457,6 +611,47 @@ function Get-FirewallProfileType {
         5 { return "domain, public" }
         6 { return "private, public" }
         7 { return "domain, private, public" }
+        default { Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleProfileTypeException -f $profileTypes), $Strings.FirewallRuleProfileType) }
+    }
+}
+
+function Get-FirewallProfileType {
+    <#
+    .SYNOPSIS
+    # Convert the profile types into a string for firewall rules
+    .EXAMPLE
+    Get-FirewallProfileType -profileTypes 0
+    Get-FirewallProfileType -profileTypes 1
+    Get-FirewallProfileType -profileTypes 4
+    Get-FirewallProfileType -profileTypes 7
+    .PARAMETER profileTypes the number that represents which profile type a firewall rule has
+    .INPUTS
+    Int16
+    .OUTPUTS
+    System.Array
+    .LINK
+    https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/jj676843(v=vs.85)#properties
+    https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrule?view=graph-rest-beta
+    https://docs.microsoft.com/en-us/graph/api/resources/intune-deviceconfig-windowsfirewallrulenetworkprofiletypes?view=graph-rest-beta
+    #>
+    Param(
+        [Parameter(Mandatory = $true)]
+        [uint16]
+        $profileTypes
+    )
+    # The resulting profile types are a bitmap of values. We can represent
+    # these combinations as strings for Intune
+    Switch ($profileTypes) {
+        # "Any" is interpreted as 0 according to the first link, but we can set the default
+        # to be "All" by omitting any value in the attribute
+        0 { return @("notConfigured") }
+        1 { return @("domain") }
+        2 { return @("private") }
+        3 { return @("domain", "private") }
+        4 { return @("public") }
+        5 { return @("domain", "public") }
+        6 { return @("private", "public") }
+        7 { return @("domain", "private", "public") }
         default { Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleProfileTypeException -f $profileTypes), $Strings.FirewallRuleProfileType) }
     }
 }
@@ -561,10 +756,10 @@ function Get-FirewallInterfaceType {
     )
     $interfaceType = Get-NetFirewallInterfaceTypeFilterWrapper -AssociatedNetFirewallRule $firewallObject
     Switch ($interfaceType.InterfaceType) {
-        $Strings.Any { return $null }
-        "LocalAccess" { return "lan" }
-        "WirelessAccess" { return "wireless" }
-        "RemoteAccess" { return "remoteAccess" }
+        $Strings.Any { return @("notConfigured") }
+        "LocalAccess" { return @() }
+        "WirelessAccess" { return @("wireless") }
+        "RemoteAccess" { return @("remoteAccess") }
         default {
             Throw [ExportFirewallRuleException]::new($Strings.FirewallRuleInterfaceTypeException -f $interfaceType.InterfaceType, `
                     $Strings.FirewallRuleInterfaceType)
