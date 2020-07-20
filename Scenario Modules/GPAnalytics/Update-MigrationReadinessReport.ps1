@@ -2,7 +2,7 @@
 .Synopsis
    Update-MigrationReadinessReport - Imports a select GPO into Intune and generate Migration report
 .DESCRIPTION
-   Runs the IPA Build verification tests
+   Updates the Migration Readiness Report for previously uploaded GPOs.
 .PARAMETER TenantAdminUPN
     UPN of the Tenant Administrator
 .PARAMETER Environment
