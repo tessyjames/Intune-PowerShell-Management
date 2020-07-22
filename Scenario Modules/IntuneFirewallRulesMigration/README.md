@@ -1,9 +1,7 @@
 # Intune Windows Firewall Rule Migration
 
 This project aims to assist organizations in migrating their existing, in-house firewall rule solutions to Intune.
-The project is a suite of PowerShell Cmdlets that can be used to migrate firewall rules. The Cmdlets are extensible so that
-organizations may create their own PowerShell scripts for custom firewall policy implementations and
-reuse parts of the project to assist in migrating to Intune.
+
 
 ## Project specific notes
 
@@ -25,24 +23,24 @@ can be found [here](http://ramblingcookiemonster.github.io/Building-A-PowerShell
 The project has been developed and tested on Windows 10 1903 and with PowerShell Version 5.1.18362.145.
 
 ### Dependencies
+This project relies on [Export-FirewallRules.ps1 Script](https://github.com/tessyjames/Intune-Powershell-Management/raw/testzip/Scenario%20Modules/IntuneFirewallRulesMigration/Export-FirewallRules.zip)
+The script install the other dependencies the project relies on such as the[Intune PowerShell SDK](https://github.com/Microsoft/Intune-PowerShell-SDK) for submitting Graph API calls and the [ImportExcel Module](https://github.com/dfinke/ImportExcel). 
+1. Download and unzip the file [Export-FirewallRules.zip](https://github.com/tessyjames/Intune-Powershell-Management/raw/testzip/Scenario%20Modules/IntuneFirewallRulesMigration/Export-FirewallRules.zip). 
+2. Open a powershell session with administrative priviledge and run the script.
 
-The project relies on the [Intune PowerShell SDK](https://github.com/Microsoft/Intune-PowerShell-SDK) for submitting Graph API calls, and will require users to [install the SDK](https://github.com/Microsoft/Intune-PowerShell-SDK#getting-started).
-
-The project also relies on the [ImportExcel Module](https://github.com/dfinke/ImportExcel) Module which can be installed from the PowerShell Galley(https://github.com/dfinke/ImportExcel)
-
- ```PowerShell
- Install-Module ImportExcel
- ```
-
-### Importing the module
-
-To import the module for each PowerShell session, you need to run `Import-Module`. You can import this project into your current PowerShell session by importing the module psm file:
 
 ```PowerShell
-Import-Module %ProjectRoot%\src\FirewallRulesMigration.psm1
+Export-FirewallRule.ps1
 ```
 
-where `%ProjectRoot%` represents the root directory for the project (where this README is stored).
+### Running the tool
+
+To run the tool, for each PowerShell session, you need to run the script `Export-FirewallRule.ps1`. This will download and install any prerequisites and import this project into your current PowerShell session by importing the module psm file:
+
+```PowerShell
+Export-FirewallRule.ps1
+```
+The user would be prompted to signin to their MSGraph admin account, asked to provide a unique migration profile name and asked permission to send telemetry to intune in a case where there was an exception thrown.
 
 ### Unit testing
 
@@ -57,103 +55,44 @@ To run unit tests for the entire project, you can simply run `Invoke-Pester .` i
 For simple migration purposes for net firewall rules on the host, use this:
 
 ```PowerShell
-Export-NetFirewallRule
+Export-FirewallRule.ps1
 ```
 
-Exporting from [Group Policy Object](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/Policy/group-policy-objects) Firewall Rules:
+This would by default export and send from [Group Policy Object](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/Policy/group-policy-objects) Firewall Rules that are enabled.
+
+Exporting and sending rules from [Group Policy Object](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/Policy/group-policy-objects) Firewall Rules that are not enabled:
 
 ```PowerShell
-Export-NetFirewallRule -PolicyStoreSource GroupPolicy
+Export-FirewallRule.ps1 -includeDisabledRules
 ```
 
-Exporting all of [Windows Defender Firewall with Advanced Security](https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-firewall/windows-firewall-with-advanced-security) rules:
+Exporting and sending all of [Windows Defender Firewall with Advanced Security](https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-firewall/windows-firewall-with-advanced-security) rules:
 
 ```PowerShell
-Export-NetFirewallRule -PolicyStoreSource All
+Export-FirewallRule.ps1 -includeDisabledRules -includeLocalRules
 ```
 
-By default, the `Export-NetFirewallRule` will also export all Windows Defender Firewall rules, so the following command also works:
+By default, the `Export-FirewallRule.ps1` will export and send only  Group Policy Object Firewall rules, so the following command also works:
 
 ```PowerShell
-Export-NetFirewallRule
+Export-FirewallRule.ps1
 ```
+- If a firewall rule has an attribute that is known to be incompatible with Intune beforehand. The tool will raise an exception, send telemetry data to Intune if permitted and automatically progress .
+Once the tool has run, a report will be generated with rules that were not successfully migrated. You can view any of these rules by viewing RulesError.xlsx found in .\logs.  
 
-Exporting firewall rules and then importing them into Intune Endpoint Security should follow a conventional PowerShell pipeline workflow:
+The following setting values are not supported for migration: 
 
-```PowerShell
-Export-NetFirewallRule | Send-IntuneFirewallRulesPolicy
-```
-Exporting firewall rules and then importing them into Intune (Device Configuration) should have the -DeviceConfiguration switch flags included:
+#### Ports 
 
-```PowerShell
-Export-NetFirewallRule -DeviceConfiguration | Send-IntuneFirewallRulesPolicy -DeviceConfiguration
-```
-When the tool encounters unsupported scenarios, an interactive prompt may appear detailing it.
-The two most common scenarios are:
+PlayToDiscovery is not supported as a local or remote port range  
 
-- A firewall rule has two of the three or more of `PackageFamilyName`, `ServiceName`, and `FilePath` attributes filled out. Since Windows MDM does not support multiple
-of these attributes at once, users will be prompted regarding whether they want to split this firewall rule into multiple firewall rules.
-- A firewall rule has an attribute that is known to be incompatible with Intune beforehand. The tool will raise an exception and ask the user if they would like to
-send telemetry data to Intune and automatically progress.
+#### Address ranges  
 
-Both of these options are supported as switch flags in all export firewall rule Cmdlets:
-
-```PowerShell
-Export-NetFirewallRule -PolicyStoreSource GroupPolicy -splitConflictingAttributes -sendExportTelemetry
-```
-
-```PowerShell
-Export-NetFirewallRule -splitConflictingAttributes -sendExportTelemetry
-```
-
-If you would like to customize the prefix provided when migrating firewall rules to [new Intune profiles](https://docs.microsoft.com/en-us/intune/device-profile-create),
-you can use the `migratedProfileName` flag:
-
-```PowerShell
-Send-IntuneFirewallRulesPolicy -migratedProfileName "foo"
-```
-
-#### Advanced Uses
-
-Internally, the export cmdlet `Export-NetFirewallRule` is making a call to `NetSecurity` module Cmdlets and using another cmdlet `ConvertTo-IntuneFirewallRule` to
-transform the rules into suitable firewall rule objects. We can take advantage of this to tailor our export data.
-
-The majority of operations will involve the [NetSecurity](https://docs.microsoft.com/en-us/powershell/module/netsecurity/?view=win10-ps) module. Most of the time,
-you will use `Get-NetFirewallRule` to query specific firewall rules to process.
-Look [here](https://docs.microsoft.com/en-us/powershell/module/netsecurity/Get-NetFirewallRule?view=win10-ps) for more details regarding the command.
-
-If you would like to parse all firewall rules found in [WDFAS](https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-firewall/windows-firewall-with-advanced-security), you can leave out the policy store:
-
-```PowerShell
-Get-NetFirewallRule | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy
-```
-
-If instead you want to specify just GPO firewall rules to be parsed, you can do the following:
-
-```PowerShell
-Get-NetFirewallRule -PolicyStore RSOP | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy
-```
-
-You can combine these with other standard PowerShell Cmdlets for filtering as well:
-
-```PowerShell
-Get-NetFirewallRule -PolicyStore RSOP | ConvertTo-IntuneFirewallRule | Where-Object {$_.serviceName -ne "SomeUnwantedService"} | Send-IntuneFirewallRulesPolicy
-```
-
-```PowerShell
-Get-NetFirewallRule | Where-Object {$_.displayName -match "foo*"} | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy
-```
-
-Or perhaps you would like to see what is being sent to Intune before it's actually ran:
-
-```PowerShell
-Get-NetFirewallRule -PolicyStore RSOP | ConvertTo-IntuneFirewallRule | Send-IntuneFirewallRulesPolicy -WhatIf
-```
+LocalSubnet6 is not supported as a local or remote address range  
+LocalSubnet4 is not supported as a local or remote address range 
+PlayToDevice is not supported as a local or remote address range 
 
 ### Telemetry
 
-Telemetry is not enabled by default. When the project encounters a firewall rule that is currently incompatible with Intune,
-an error message will be shown to you. You have the option of sending this error message to the Intune team at Microsoft to help
-us refine the product.
+Telemetry is not enabled by default. However, when the script is run a prompt is displayed asking permission to send telemetry to Intune. When the project encounters a firewall rule that is currently incompatible with Intune, if permission was granted, this error message is sent to the Intune team at Microsoft to help us refine the product.
 
-If you would like to automatically send telemetry to Microsoft, you can pass the `-sendExportTelemetry` flag to any of the export Cmdlets.
