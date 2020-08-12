@@ -23,9 +23,9 @@ can be found [here](http://ramblingcookiemonster.github.io/Building-A-PowerShell
 The project has been developed and tested on Windows 10 1903 and with PowerShell Version 5.1.18362.145.
 
 ### Dependencies
-This project relies on [Export-FirewallRules.ps1 Script](https://github.com/tessyjames/Intune-Powershell-Management/raw/testzip/Scenario%20Modules/IntuneFirewallRulesMigration/Export-FirewallRules.zip)
+This project relies on [Export-FirewallRules.ps1 Script](https://github.com/microsoft/Intune-Powershell-Management/raw/testzip/Scenario%20Modules/IntuneFirewallRulesMigration/Export-FirewallRules.zip)
 The script install the other dependencies the project relies on such as the[Intune PowerShell SDK](https://github.com/Microsoft/Intune-PowerShell-SDK) for submitting Graph API calls and the [ImportExcel Module](https://github.com/dfinke/ImportExcel). 
-1. Download and unzip the file [Export-FirewallRules.zip](https://github.com/tessyjames/Intune-Powershell-Management/raw/testzip/Scenario%20Modules/IntuneFirewallRulesMigration/Export-FirewallRules.zip). 
+1. Download and unzip the file [Export-FirewallRules.zip](https://github.com/microsoft/Intune-Powershell-Management/raw/testzip/Scenario%20Modules/IntuneFirewallRulesMigration/Export-FirewallRules.zip). 
 2. Open a powershell session with administrative priviledge and run the script.
 
 

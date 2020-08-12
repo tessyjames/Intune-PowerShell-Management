@@ -69,7 +69,7 @@ function ConvertTo-IntuneFirewallRule {
 
     End {
         $intuneFirewallRuleObjects = @()
-
+        $choice = ""
         $remainingFirewallRules = $firewallRules.Count
        
         ForEach ($firewallRule in $firewallRules) {
@@ -194,13 +194,13 @@ function ConvertTo-IntuneFirewallRule {
                 
                 Switch ($choice) {
                     $Strings.Yes {
-                        Send-ConvertToIntuneFirewallRuleTelemetry -data $errorMessage `
+                        Send-FailureToConvertToIntuneFirewallRuleTelemetry -data $errorMessage `
                             -errorType $errorType `
                             -firewallRuleProperty $errorFirewallRuleProperty 
                     }
                     $Strings.No { Throw $Strings.ConvertToIntuneFirewallRuleNoException }
                     $Strings.YesToAll {
-                        Send-ConvertToIntuneFirewallRuleTelemetry -data $errorMessage `
+                        Send-FailureToConvertToIntuneFirewallRuleTelemetry -data $errorMessage `
                             -errorType $errorType `
                             -firewallRuleProperty $errorFirewallRuleProperty
                         $sendConvertTelemetry = $true
@@ -217,11 +217,11 @@ function ConvertTo-IntuneFirewallRule {
                 $rulesFailedToConvert += $newExcelObject
             }
         }
-       
+       $dataTelemetry = "{0}/{1} Firewall rules were successfully converted to IntuneFirewallRuleObjects" -f ($firewallRules.Count - $rulesFailedToConvert.Count), $firewallRules.Count
        # Create an excel file with information about the items that where incompatible with intunes format
         Export-ExcelFile -fileName "RuleError" -failedToConvert $rulesFailedToConvert 
         Set-SummaryDetail -numberOfFirewallRules $firewallRules.Count -ConvertedRulesNumber ($firewallRules.Count - $rulesFailedToConvert.Count )
-        
+        Send-SuccessCovertToIntuneFirewallRuleTelemetry -data $dataTelemetry
         return $intuneFirewallRuleObjects
     }
 }

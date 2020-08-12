@@ -52,13 +52,17 @@ FirewallRuleEdgeTraversalException=Could not map edge traversal policy with dire
 FirewallRuleEdgeTraversal=EdgeTraversalPolicy
 
 # Send-Telemetry
+TelemetrySuccessfullyConvertedToIntuneFirewallRule=SuccessfullyConvertedToIntuneFirewallRule
+TelemetryIntuneFirewallRuleGraphImportSuccess=IntuneFirewallRuleGraphImportSuccess
 TelemetryConvertToIntuneFirewallRule=ConvertToIntuneFirewallRule
 TelemetryIntuneFirewallRuleGraph=IntuneFirewallRuleGraph
 Message=Message
 ErrorType=ErrorType
+SuccessType=SuccessType
 FirewallRuleProperty=FirewallRuleProperty
 TelemetrySignature=Telemetry Signature
 TelemetryError=Microsoft Telemetry Error
+TelemetrySuccess=Microsoft Telemetry Success
 TelemetryId=Telemetry Id
 TelemetryErrorTitle=Unhandled exception processing Intune Firewall Rule
 TelemetryErrorMessage=Encountered the following error:\n{0}\n{1}\nWould you like to send this error message to Microsoft to help us improve our product?
