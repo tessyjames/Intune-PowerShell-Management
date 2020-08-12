@@ -127,7 +127,7 @@ function Get-SummaryDetail
     }
     else
     {
-        Write-Host "Imported " $SummaryDetails.NumberofSucceededSent "/" $SummaryDetails.NumberofSplitRules "into the Endpoint Security Firewallrule Profile '"$SummaryDetails.ProfileName"'"
+        Write-Host "Imported " $SummaryDetails.NumberofSucceededSent "/" $SummaryDetails.NumberofSplitRules "into the Endpoint Security Firewall Rule Profile '"$SummaryDetails.ProfileName"'"
     }
     if(Test-Path ".\logs")
     {

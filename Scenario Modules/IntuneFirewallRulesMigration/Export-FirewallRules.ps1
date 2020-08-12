@@ -24,14 +24,14 @@ if(-not(Test-Path ".\Intune-PowerShell-Management.zip")){
 }
 #----------------------------------------------------------------------------------------------
 
+## check for running from correct folder location
 
 
 
-#Import all the right modules
+
 Import-Module ".\Intune-PowerShell-Management-master\Scenario Modules\IntuneFirewallRulesMigration\FirewallRulesMigration.psm1"
 . ".\Intune-PowerShell-Management-master\Scenario Modules\IntuneFirewallRulesMigration\IntuneFirewallRulesMigration\Private\Strings.ps1"
 
-##Validate the user's profile name
 $profileName = ""
 try
 {

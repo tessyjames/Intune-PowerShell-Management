@@ -200,7 +200,9 @@ a
             Add-Content  $payloadPath "`r `n$date `r `n$textHeader `r `n$NewIntuneObject"
         }
         
+        $dataTelemetry = "{0}/{1} Intune Firewall Rules were successfully imported to Endpoint-Security" -f $sentSuccessfully.Count, $firewallArr.Count
         Export-ExcelFile -fileName "Imported_to_Intune" -succeededToSend $sentSuccessfully 
+        Send-SuccessIntuneFirewallGraphTelemetry -data  $dataTelemetry
         Export-ExcelFile -fileName "Failed_to_Import_to_Intune" -failedToSend $failedToSend
         Set-SummaryDetail -numberOfSplittedRules $firewallArr.Count -ProfileName $migratedProfileName -successCount $sentSuccessfully.Count 
         Get-SummaryDetail
