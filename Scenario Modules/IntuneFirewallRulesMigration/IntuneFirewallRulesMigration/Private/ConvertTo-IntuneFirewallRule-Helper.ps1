@@ -109,7 +109,7 @@ function Get-FirewallPackageFamilyName {
     # In scenarios where a package security identifier was found, but did not exist when we created the hash table,
     # user interaction is required.
     If ($appFilterInstance.Package -and -not $packageSidLookup.ContainsKey($appFilterInstance.Package)) {
-         Throw [ExportFirewallRuleException]::new($Strings.FirewallRulePackageFamilyNameException, $Strings.FirewallRulePackageFamilyName)
+            Throw [ExportFirewallRuleException]::new($Strings.FirewallRulePackageFamilyNameException, $Strings.FirewallRulePackageFamilyName)
         
     }
     return $packageSidLookup[$appFilterInstance.Package]
@@ -497,66 +497,52 @@ function Test-FirewallRemoteAddressRange{
     )
     $allowedAddress = @("Defaultgateway", "DHCP", "DNS", "WINS", "Intranet", "RmtIntranet", "Internet", "Ply2Renders", "LocalSubnet")
     $addressSet = New-Object -TypeName 'System.Collections.Generic.HashSet[String]' -ArgumentList (, [String[]]$allowedAddress)
-    
     if($addressRange -is [String]){
          #Check the address if it is one of the addresses in the list of suitable addresses in the allowedAddress set
-        $addressRangeArray = $addressRange.Split('-')
+       if($addressSet -ccontains $addressRange){
+           return $addressRange
+       }
+       else{
+           #Test the address if it is an IPV6 or IPV4 address
+           $addressArray = $addressRange.Split('/')
+           try{
+                $result = $addressArray[0] -match [IpAddress]$addressArray[0]
+                
+           }
+           catch{
+                Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleAddressRangeNoMatchException -f $addressRange), $Strings.FirewallRuleAddressRange) 
+                $result = $false
 
-        foreach($address in $addressRangeArray){
+           }
+           if($result){
+                return $addressRange
+           }
+       }
+    }
+    if($addressRange -is [array]){
+        $newaddressRange = @()
+        foreach($address in $addressRange)
+        {
+            #Check the address if it is one of the addresses in the list of suitable addresses in the allowedAddress set
             if($addressSet -ccontains $address){
-                return $address
+                $newaddressRange += $address
             }
             else{
                 #Test the address if it is an IPV6 or IPV4 address
                 $addressArray = $address.Split('/')
                 try{
                      $result = $addressArray[0] -match [IpAddress]$addressArray[0]
-
+                     
                 }
                 catch{
                      Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleAddressRangeNoMatchException -f $addressRange), $Strings.FirewallRuleAddressRange) 
                      $result = $false
-                
+                     break
                 }
+
                 if($result){
-                    $result = $true
+                    $newaddressRange += $address
                 }
-            }
-        }
-        if($result){
-            return $addressRange
-        }
-    }
-    
-    if($addressRange -is [array]){
-        $newaddressRange = @()
-        foreach($address in $addressRange)
-        {
-            #Check the address if it is one of the addresses in the list of suitable addresses in the allowedAddress set
-            if($addressSet -ccontains $addr){
-                $newaddressRange += $address
-            }
-            else{
-                    $addressRangeArray = $address.Split('-')
-                    foreach($addr in $addressRangeArray)
-                    {
-                    #Test the address if it is an IPV6 or IPV4 address
-                         $addressArray = $addr.Split('/')
-                         try{
-                              $result = $addressArray[0] -match [IpAddress]$addressArray[0]
-                         }
-                         catch{
-                              Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleAddressRangeNoMatchException -f $addressRange), $Strings.FirewallRuleAddressRange) 
-                              $result = $false
-                              break
-                         }
-                         if($result){
-                             $result = $true
-                         }
-                    }
-                    if($result){
-                        $newaddressRange += $address
-                    }
             }
 
         }

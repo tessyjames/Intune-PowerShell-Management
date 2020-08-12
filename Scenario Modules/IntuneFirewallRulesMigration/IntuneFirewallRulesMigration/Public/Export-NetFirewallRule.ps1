@@ -96,7 +96,6 @@ function Export-NetFirewallRule {
                 $errorMessage = $_.ToString()
             
                 Write-Error $errorMessage
-                return
             }
 
         }
