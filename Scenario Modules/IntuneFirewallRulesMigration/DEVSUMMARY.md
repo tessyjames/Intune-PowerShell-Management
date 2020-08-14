@@ -4,13 +4,14 @@ This document is made specifically to help developers get started with developin
 
 # Set up and Configuration
 
-1. Download/Clone the repo from [Github](https://github.com/microsoft/Intune-PowerShell-Management/archive/master.zip) or from the Device Intent Repo.
+1. Download/Clone the repo from [Github](https://github.com/microsoft/Intune-PowerShell-Management/archive/master.zip),[Script Download](https://github.com/microsoft/Intune-PowerShell-Management/raw/master/Scenario%20Modules/IntuneFirewallRulesMigration/Export-FirewallRules.zip) or from the Device Intent Repo.
 
-2. Navigate to the directory where you downloaded or cloned the repo to. If you downloaded the repo from [Github](https://github.com/microsoft/Intune-PowerShell-Management/archive/master.zip, navigate to Scenario Modules/IntuneFirewallRulesMigration. If you are working with the Device Intent repo, navigate to [$DeviceIntentRoot]/src/tools/IntuneFirewallRulesMigration.
+2. Navigate to the directory where you downloaded or cloned the repo to. If you downloaded the repo from [Github](https://github.com/microsoft/Intune-PowerShell-Management/archive/master.zip, navigate to Scenario Modules/IntuneFirewallRulesMigration. If you are working with the Device Intent repo, navigate to [$DeviceIntentRoot]/src/tools/IntuneFirewallRulesMigration. If you downloaded the script directly, extract the folder.
 
 # Running the Tool 
 
-To run the tool, for each PowerShell sessionv(run in admin mode), you need to run the script `Export-FirewallRule.ps1`. This will download, install and run any prerequisites and import this project into your current PowerShell session by importing the module psm file:
+To run the tool, for each PowerShell sessionv(run in admin mode), you need to run the script `Export-FirewallRule.ps1`. This will download, install and run any prerequisites and import this project into your current PowerShell session by importing the module psm file  (this is best if you downloaded the script directly through this link [Script Download](https://github.com/microsoft/Intune-PowerShell-Management/raw/master/Scenario%20Modules/IntuneFirewallRulesMigration/Export-FirewallRules.zip)):
+:
 
 ```PowerShell
 Export-FirewallRule.ps1
@@ -21,7 +22,7 @@ Note: If you run the above command you can skip the commands below.
 
 Or 
 
-Run the following commad in a powershell session (run as administrator)
+Run the following commad in a powershell session - run as administrator(this is best if you cloned the repo from Github or DI)
 
 ```PowerShell
 Import-Module .\FirewallRulesMigration.psm1
@@ -72,7 +73,7 @@ This would import only the first 20 rules from your machine. You can adjust this
  1. Fork the [Github repo](https://github.com/microsoft/Intune-PowerShell-Management)
  2. Clone it to your local machine and then push your changes to the forked repo
  3. Create a PR to merge your changes to the microsoft repo. Dont forget to add you microsoft email to the signature when you create a PR for the first time. 
-
+ 4. After creating the PR you can reach out to the contributors of the microsoft repo to approve the PR so it can be merged to the public repo. (Note: always have your code approved by the team first before pushing to the github repo. )
 # Useful Links
 
 1. [PM Documentation](https://microsoft-my.sharepoint-df.com/:w:/r/personal/mattsha_microsoft_com/_layouts/15/guestaccess.aspx?e=ZUxzZC&share=EfIKKv-5eQBKpIr_yQMEV_IB8nErYJZYC26YiIizNvGrwg)
