@@ -515,7 +515,7 @@ function Test-FirewallRemoteAddressRange{
                 }
                 catch{
                      Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleAddressRangeNoMatchException -f $addressRange), $Strings.FirewallRuleAddressRange) 
-                     $result = $false
+                    
                 
                 }
                 if($result){
@@ -547,8 +547,7 @@ function Test-FirewallRemoteAddressRange{
                          }
                          catch{
                               Throw [ExportFirewallRuleException]::new($($Strings.FirewallRuleAddressRangeNoMatchException -f $addressRange), $Strings.FirewallRuleAddressRange) 
-                              $result = $false
-                              break
+                              
                          }
                          if($result){
                              $result = $true
