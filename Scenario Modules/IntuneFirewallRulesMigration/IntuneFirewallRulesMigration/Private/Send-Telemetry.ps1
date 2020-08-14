@@ -1,16 +1,16 @@
 . "$PSScriptRoot\Use-HelperFunctions.ps1"
 . "$PSScriptRoot\Strings.ps1"
-function Send-ConvertToIntuneFirewallRuleTelemetry {
+function Send-FailureToConvertToIntuneFirewallRuleTelemetry {
     <#
     .SYNOPSIS
     Sends telemetry regarding converting firewall rules to IntuneFirewallRule objects out to the Intune team at Microsoft.
 
     .DESCRIPTION
-    Send-ConvertToIntuneFirewallRuleTelemetry will send the provided string to the Intune team for diagnosing exceptions encountered by the user.
+    Send-FailureToConvertToIntuneFirewallRuleTelemetry will send the provided string to the Intune team for diagnosing exceptions encountered by the user.
     Sending telemetry is completely optional and users should be prompted to send telemetry when encountering exceptions.
 
     .EXAMPLE
-    Send-ConvertToIntuneFirewallRuleTelemetry -data "Hello, world!"
+    Send-FailureToConvertToIntuneFirewallRuleTelemetry -data "Hello, world!"
 
     .PARAMETER data a string representing the data to be sent to Intune
     #>
@@ -27,6 +27,28 @@ function Send-ConvertToIntuneFirewallRuleTelemetry {
         -category $Strings.TelemetryConvertToIntuneFirewallRule `
         -errorType $errorType `
         -firewallRuleProperty $firewallRuleProperty
+}
+function Send-SuccessCovertToIntuneFirewallRuleTelemetry {
+    param (
+        [Parameter(Mandatory = $true)]
+        [String]
+        $data
+    )
+    Send-SuccessTelemetry -data $data `
+    -category $Strings.TelemetrySuccessfullyConvertedToIntuneFirewallRule `
+   
+    
+}
+
+function Send-SuccessIntuneFirewallGraphTelemetry {
+    Param(
+        [Parameter(Mandatory = $true)]
+        [String]
+        $data
+    )
+    Send-SuccessTelemetry -data $data `
+        -category $Strings.TelemetryIntuneFirewallRuleGraphImportSuccess
+    
 }
 
 function Send-IntuneFirewallGraphTelemetry {
@@ -97,7 +119,33 @@ function Send-FailureTelemetry {
     # all telemetry sent are errors anyways
     $logger.LogFailure($Strings.TelemetrySignature, $Strings.TelemetryError, $category, $Strings.TelemetryId, $eventProperties)
 }
+function Send-SuccessTelemetry {
+    
+    Param(
+        [Parameter(Mandatory = $true)]
+        [String]
+        $data,
+        [Parameter(Mandatory = $true)]
+        [String]
+        $category 
+    )
 
+    Initialize-Telemetry
+    $eventProperties = New-Object Microsoft.Applications.Telemetry.EventProperties
+    $eventProperties.Name = $category
+
+    $propertiesToSend = @{$Strings.Message = $data;}
+    ForEach ($property in $propertiesToSend.GetEnumerator()) {
+        # Output needs to be suppressed to avoid polluting the output stream
+        Write-Debug $($eventProperties.SetProperty($property.Name, $property.Value))
+    }
+
+    $logger = [Microsoft.Applications.Telemetry.Server.LogManager]::GetLogger()
+    # LogEvent() sends telemetry for an event that occured. Since the [Microsoft.Applications.Telemetry.Server.LogManager] class
+    # does not have a function to send telemetry for success. LogEvent works
+    
+    $logger.LogEvent($eventProperties)
+}
 function Get-IntuneFirewallRuleErrorTelemetryChoice {
     <#
     .SYNOPSIS
